@@ -2,20 +2,38 @@
  * Type definitions for Haiwell Script Extension
  */
 
+
 export interface ObjectPropertyMap {
-    [objectName: string]: PropertyInfo[];
+    [key: string]: PropertyInfo[];
 }
 
 export interface PropertyInfo {
     name: string;
-    type: PropertyType;
+    type: string;
+    rawType?: string;
+    // optional source line in the CSV (1-based)
+    sourceLine?: number;
+    // optional human readable description from CSV
     description?: string;
+    // optional string length for string-like types
+    stringLength?: number;
 }
 
-export enum PropertyType {
-    Property = 'property',
-    Method = 'method',
-    Constant = 'constant'
+export interface ObjectUsage {
+    files: Set<string>;
+    properties: Set<string>;
+}
+
+export interface VariableDefinition {
+    objectName: string;
+    properties: PropertyInfo[];
+    sourceFile: string;
+}
+
+export interface GlobalSymbol {
+    name: string;
+    kind: "function" | "variable" | "class" | "other";
+    sourceFile: string;
 }
 
 export interface DollarObjectMatch {
