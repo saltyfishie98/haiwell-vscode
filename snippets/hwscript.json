@@ -1,0 +1,67 @@
+{
+  "Function": {
+    "prefix": "func",
+    "body": [
+      "function ${1:name}(${2:params}) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "Function declaration"
+  },
+  "Class": {
+    "prefix": "class",
+    "body": [
+      "class ${1:name} {",
+      "\tfunction constructor(${2:params}) {",
+      "\t\t$0",
+      "\t}",
+      "}"
+    ],
+    "description": "Class declaration"
+  },
+  "If Statement": {
+    "prefix": "if",
+    "body": [
+      "if (${1:condition}) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "If statement"
+  },
+  "If-Else Statement": {
+    "prefix": "ifelse",
+    "body": [
+      "if (${1:condition}) {",
+      "\t$2",
+      "} else {",
+      "\t$0",
+      "}"
+    ],
+    "description": "If-else statement"
+  },
+  "For Loop": {
+    "prefix": "for",
+    "body": [
+      "for (var ${1:i} = 0; ${1:i} < ${2:length}; ${1:i}++) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "For loop"
+  },
+  "While Loop": {
+    "prefix": "while",
+    "body": [
+      "while (${1:condition}) {",
+      "\t$0",
+      "}"
+    ],
+    "description": "While loop"
+  },
+  "Variable Declaration": {
+    "prefix": "var",
+    "body": [
+      "var ${1:name} = ${0:value};"
+    ],
+    "description": "Variable declaration"
+  }
+}

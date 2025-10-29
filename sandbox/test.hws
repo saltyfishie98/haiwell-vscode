@@ -17,6 +17,8 @@ function timestamp_to_datetime(timestamp) {
     return formattedHours + ":" + formattedMinutes + ":" + formattedSeconds;
 }
 
+print("test");
+
 function publish_entry(unique_id, sku) {
 	$Publish.et_sku = sku;
 	$Publish.et_unique_id = unique_id;
