@@ -9,7 +9,7 @@ export interface ObjectPropertyMap {
 
 export interface VariableInfo {
     type: string;
-    rawType?: string;
+    rawType: string;
     // optional source line in the CSV (1-based)
     sourceLine?: number;
     // optional human readable description from CSV

@@ -1,10 +1,15 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { PREDEFINED_OBJECT_PROPERTY_MAP, PREDEFINED_VARIABLES } from "../predefined";
+import {
+    PREDEFINED_OBJECT_PROPERTY_MAP,
+    PREDEFINED_VARIABLES,
+} from "../predefined";
 import { ProjectObjectCache } from "../project_object_cache";
 import { PropertyInfo } from "../types";
 
-export class HaiwellScriptCompletionProvider implements vscode.CompletionItemProvider {
+export class HaiwellScriptCompletionProvider
+    implements vscode.CompletionItemProvider
+{
     async provideCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,
@@ -18,7 +23,10 @@ export class HaiwellScriptCompletionProvider implements vscode.CompletionItemPro
         const dot = linePrefix.match(/(\w+)\.$/);
         if (dot) {
             const objectName = dot[1];
-            const items = await this.getPropertyCompletions(objectName, document);
+            const items = await this.getPropertyCompletions(
+                objectName,
+                document
+            );
             return items.length > 0
                 ? new vscode.CompletionList(items, false)
                 : undefined;
@@ -41,8 +49,10 @@ export class HaiwellScriptCompletionProvider implements vscode.CompletionItemPro
         // and add them as high-priority completions (local context)
         try {
             const text = document.getText();
-            const localVarRegex = /\b(?:var|let|const)\s+([A-Za-z_][A-Za-z0-9_]*)/g;
-            const localFuncRegex = /\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
+            const localVarRegex =
+                /\b(?:var|let|const)\s+([A-Za-z_][A-Za-z0-9_]*)/g;
+            const localFuncRegex =
+                /\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
 
             for (const match of text.matchAll(localVarRegex)) {
                 const name = match[1];
@@ -98,8 +108,8 @@ export class HaiwellScriptCompletionProvider implements vscode.CompletionItemPro
                     g.kind === "function"
                         ? vscode.CompletionItemKind.Function
                         : g.kind === "class"
-                            ? vscode.CompletionItemKind.Class
-                            : vscode.CompletionItemKind.Variable;
+                        ? vscode.CompletionItemKind.Class
+                        : vscode.CompletionItemKind.Variable;
 
                 const item = new vscode.CompletionItem(g.name, kind);
                 item.detail = `${g.name} (global from lib)`;
@@ -142,23 +152,33 @@ export class HaiwellScriptCompletionProvider implements vscode.CompletionItemPro
             addedObjects.add(objectName);
         }
 
-        for (const name of Object.keys(PREDEFINED_VARIABLES)) {
-            const varName = `\$${name}`;
+        for (const [name, info] of Object.entries(PREDEFINED_VARIABLES)) {
+            const varName = `\$${name.replace(/^_/, "")}`;
 
             if (addedObjects.has(varName)) {
                 continue;
             }
 
+            let doc;
+            if (info.description) {
+                doc =
+                    `## ${varName}\n\n` +
+                    `**haiwell type**: ${info.rawType}\n\n` +
+                    `**description**: ${info.description}`;
+            } else {
+                doc =
+                    `## ${varName}\n\n` +
+                    `**haiwell type**: ${info.rawType}\n\n`;
+            }
+
             const item = new vscode.CompletionItem(
                 varName,
-                vscode.CompletionItemKind.Variable
+                vscode.CompletionItemKind.Constant
             );
             item.detail = `${varName} (system variable)`;
             item.insertText = varName;
             item.sortText = `2${varName}`;
-            item.documentation = new vscode.MarkdownString(
-                `Predefined **${varName}**`
-            );
+            item.documentation = new vscode.MarkdownString(doc);
 
             completions.push(item);
         }
@@ -197,7 +217,10 @@ export class HaiwellScriptCompletionProvider implements vscode.CompletionItemPro
             addedObjects.add(objectName);
         }
 
-        addedObjects = new Set([...addedObjects, ...Object.keys(PREDEFINED_VARIABLES)]);
+        addedObjects = new Set([
+            ...addedObjects,
+            ...Object.keys(PREDEFINED_VARIABLES),
+        ]);
 
         // Used but undefined objects
         for (const [objectName, usage] of projectObjects.entries()) {
@@ -254,7 +277,9 @@ export class HaiwellScriptCompletionProvider implements vscode.CompletionItemPro
                 md.appendMarkdown(`  \n\nHaiwell Type: **${prop.rawType}**`);
             }
             if (prop.type === "string" && prop.stringLength !== undefined) {
-                md.appendMarkdown(`  \n\nString length: **${prop.stringLength}**`);
+                md.appendMarkdown(
+                    `  \n\nString length: **${prop.stringLength}**`
+                );
             }
             if (prop.description) {
                 md.appendMarkdown(`  \n\n${prop.description}`);
@@ -275,7 +300,9 @@ export class HaiwellScriptCompletionProvider implements vscode.CompletionItemPro
 
             // Match var/let/const <name> = { ... }
             const varRegex = new RegExp(
-                "\\b(?:var|let|const)\\s+" + objectName + "\\s*=\\s*\\{([\\s\\S]*?)\\}",
+                "\\b(?:var|let|const)\\s+" +
+                    objectName +
+                    "\\s*=\\s*\\{([\\s\\S]*?)\\}",
                 "g"
             );
 
@@ -289,7 +316,8 @@ export class HaiwellScriptCompletionProvider implements vscode.CompletionItemPro
 
             const extractProps = (body: string) => {
                 // Match unquoted or quoted property keys followed by colon
-                const keyRegex = /(?:['"])?([A-Za-z_][A-Za-z0-9_]*)(?:['"])?\s*:/g;
+                const keyRegex =
+                    /(?:['"])?([A-Za-z_][A-Za-z0-9_]*)(?:['"])?\s*:/g;
                 let m: RegExpExecArray | null;
                 while ((m = keyRegex.exec(body)) !== null) {
                     props.add(m[1]);
