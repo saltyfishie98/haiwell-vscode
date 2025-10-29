@@ -4,6 +4,9 @@
   "description": "Language support for Haiwell scripting",
   "version": "0.0.1",
   "publisher": "saltyfishie",
+  "repository": {
+    "url": "https://github.com/saltyfishie98/haiwell-vscode"
+  },
   "engines": {
     "vscode": "^1.105.0"
   },
