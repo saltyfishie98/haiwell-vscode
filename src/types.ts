@@ -7,6 +7,17 @@ export interface ObjectPropertyMap {
     [key: string]: PropertyInfo[];
 }
 
+export interface VariableInfo {
+    type: string;
+    rawType?: string;
+    // optional source line in the CSV (1-based)
+    sourceLine?: number;
+    // optional human readable description from CSV
+    description?: string;
+    // optional string length for string-like types
+    stringLength?: number;
+}
+
 export interface PropertyInfo {
     name: string;
     type: string;

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { PREDEFINED_OBJECT_PROPERTY_MAP } from "../predefined";
+import { PREDEFINED_OBJECT_PROPERTY_MAP, PREDEFINED_VARIABLES } from "../predefined";
 import { ProjectObjectCache } from "../project_object_cache";
 import { PropertyInfo } from "../types";
 
@@ -35,7 +35,7 @@ export class HaiwellScriptCompletionProvider implements vscode.CompletionItemPro
         const cache = ProjectObjectCache.getInstance();
         const definedObjects = cache.getDefinedObjects();
         const projectObjects = await cache.getProjectObjects();
-        const addedObjects = new Set<string>();
+        let addedObjects = new Set<string>();
 
         // Collect local variables and functions declared in the current document
         // and add them as high-priority completions (local context)
@@ -128,7 +128,7 @@ export class HaiwellScriptCompletionProvider implements vscode.CompletionItemPro
             );
             item.detail = `${objectName} (predefined)`;
             item.insertText = objectName;
-            item.sortText = `2${objectName}`;
+            item.sortText = `1${objectName}`;
 
             const propPreview = properties
                 .slice(0, 5)
@@ -140,6 +140,27 @@ export class HaiwellScriptCompletionProvider implements vscode.CompletionItemPro
 
             completions.push(item);
             addedObjects.add(objectName);
+        }
+
+        for (const name of Object.keys(PREDEFINED_VARIABLES)) {
+            const varName = `\$${name}`;
+
+            if (addedObjects.has(varName)) {
+                continue;
+            }
+
+            const item = new vscode.CompletionItem(
+                varName,
+                vscode.CompletionItemKind.Variable
+            );
+            item.detail = `${varName} (system variable)`;
+            item.insertText = varName;
+            item.sortText = `2${varName}`;
+            item.documentation = new vscode.MarkdownString(
+                `Predefined **${varName}**`
+            );
+
+            completions.push(item);
         }
 
         // User defined objects
@@ -175,6 +196,8 @@ export class HaiwellScriptCompletionProvider implements vscode.CompletionItemPro
             completions.push(item);
             addedObjects.add(objectName);
         }
+
+        addedObjects = new Set([...addedObjects, ...Object.keys(PREDEFINED_VARIABLES)]);
 
         // Used but undefined objects
         for (const [objectName, usage] of projectObjects.entries()) {

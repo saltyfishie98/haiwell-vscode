@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { GlobalSymbol, ObjectUsage, PropertyInfo, VariableDefinition } from "./types";
-import { PREDEFINED_OBJECT_PROPERTY_MAP } from "./predefined";
+import { PREDEFINED_OBJECT_PROPERTY_MAP, PREDEFINED_VARIABLES } from "./predefined";
 
 export class ProjectObjectCache {
     private static instance: ProjectObjectCache;
@@ -359,9 +359,11 @@ export class ProjectObjectCache {
     }
 
     isObjectDefined(objectName: string): boolean {
+
         return (
             this.variableDefinitions.has(objectName) ||
-            PREDEFINED_OBJECT_PROPERTY_MAP.hasOwnProperty(objectName)
+            PREDEFINED_OBJECT_PROPERTY_MAP.hasOwnProperty(objectName) ||
+            PREDEFINED_VARIABLES.hasOwnProperty(objectName)
         );
     }
 

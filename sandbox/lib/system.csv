@@ -1,2 +1,0 @@
-ID,Variable name ,Register type,Register address,Address length,Data type,Character set,String length ,The mode of reading and writing,Variable description,Initial value,Minimum value,Maximum value,Engineering quantity conversion,Original minimum,Origianl maximum,Random generation of simulation,Power-off protection,Variable Grouping,Variable Categorie,Slave Station,Slave register type,Slave address,Read write mode of slave station
-281,Date,W,0,1,STRING,,0,r,,90,,,,,,0,1,,,0,,,,

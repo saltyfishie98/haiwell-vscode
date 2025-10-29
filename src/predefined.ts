@@ -1,4 +1,4 @@
-import { ObjectPropertyMap } from "./types";
+import { ObjectPropertyMap, PropertyInfo, VariableInfo } from "./types";
 
 export const PREDEFINED_OBJECT_PROPERTY_MAP: ObjectPropertyMap = {
     Window: [
@@ -24,4 +24,8 @@ export const PREDEFINED_OBJECT_PROPERTY_MAP: ObjectPropertyMap = {
         { name: "PI", type: "number" },
         { name: "E", type: "number" },
     ],
+};
+
+export const PREDEFINED_VARIABLES: { [key: string]: VariableInfo } = {
+    Date: { type: "string", rawType: "STRING" },
 };
