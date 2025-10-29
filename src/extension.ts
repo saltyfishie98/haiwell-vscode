@@ -8,6 +8,13 @@ interface ObjectPropertyMap {
 interface PropertyInfo {
   name: string;
   type: string;
+  rawType?: string;
+  // optional source line in the CSV (1-based)
+  sourceLine?: number;
+  // optional human readable description from CSV
+  description?: string;
+  // optional string length for string-like types
+  stringLength?: number;
 }
 
 interface ObjectUsage {
@@ -114,38 +121,209 @@ class ProjectObjectCache {
     }
   }
 
+  // async parseVariableCSV(fileUri: vscode.Uri): Promise<void> {
+  //   try {
+  //     const document = await vscode.workspace.openTextDocument(fileUri);
+  //     const content = document.getText();
+  //     const lines = content.split(/\r?\n/).filter((line) => line.trim());
+
+  //     if (lines.length < 2) {
+  //       return;
+  //     }
+
+  //     const fileName = path.basename(fileUri.fsPath, ".csv");
+  //     const objectName = fileName;
+
+  //     const properties: PropertyInfo[] = [];
+
+  //     for (let i = 1; i < lines.length; i++) {
+  //       const line = lines[i].trim();
+  //       if (!line) {
+  //         continue;
+  //       }
+
+  //       const parts = line
+  //         .split(",")
+  //         .map((p) => p.trim().replace(/^["']|["']$/g, ""));
+
+  //       if (parts.length >= 2) {
+  //         const name = parts[0];
+  //         const type = parts[1];
+
+  //         if (name && type) {
+  //           properties.push({ name, type });
+  //         }
+  //       }
+  //     }
+
+  //     if (properties.length > 0) {
+  //       this.variableDefinitions.set(objectName, {
+  //         objectName,
+  //         properties,
+  //         sourceFile: fileUri.fsPath,
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error(`Error parsing CSV file ${fileUri.fsPath}:`, error);
+  //   }
+  // }
+
   async parseVariableCSV(fileUri: vscode.Uri): Promise<void> {
     try {
       const document = await vscode.workspace.openTextDocument(fileUri);
       const content = document.getText();
-      const lines = content.split(/\r?\n/).filter((line) => line.trim());
 
-      if (lines.length < 2) {
-        return;
+      // Robust CSV parsing: supports quoted fields, commas inside quotes,
+      // and records that span multiple lines when a quoted field contains newlines.
+      const rows: { fields: string[]; line: number }[] = [];
+
+      const rawLines = content.split(/\r?\n/);
+      let idx = 0;
+      while (idx < rawLines.length) {
+        let lineText = rawLines[idx];
+        let recordStartLine = idx + 1; // 1-based
+
+        // If quotes are unbalanced on this line, keep appending following lines
+        const countQuotes = (s: string) => (s.match(/"/g) || []).length;
+        while (countQuotes(lineText) % 2 !== 0 && idx + 1 < rawLines.length) {
+          idx++;
+          lineText += "\n" + rawLines[idx];
+        }
+
+        // Parse fields for this (possibly multi-line) record
+        const fields: string[] = [];
+        let field = "";
+        let inQuotes = false;
+        for (let i = 0; i < lineText.length; i++) {
+          const ch = lineText[i];
+          if (inQuotes) {
+            if (ch === '"') {
+              // double quote escape
+              if (i + 1 < lineText.length && lineText[i + 1] === '"') {
+                field += '"';
+                i++; // skip escaped quote
+              } else {
+                inQuotes = false;
+              }
+            } else {
+              field += ch;
+            }
+          } else {
+            if (ch === '"') {
+              inQuotes = true;
+            } else if (ch === ",") {
+              fields.push(field.trim());
+              field = "";
+            } else {
+              field += ch;
+            }
+          }
+        }
+        fields.push(field.trim());
+
+        rows.push({ fields, line: recordStartLine });
+        idx++;
       }
+
+      if (rows.length < 2) {
+        return; // no data rows
+      }
+
+      const header = rows[0].fields.map((h) =>
+        h
+          .replace(/^['\"]|['\"]$/g, "")
+          .toLowerCase()
+          .trim()
+      );
+
+      const findHeaderIndex = (aliases: string[]): number => {
+        for (let i = 0; i < header.length; i++) {
+          const h = header[i];
+          for (const a of aliases) {
+            if (h === a || h.includes(a)) {
+              return i;
+            }
+          }
+        }
+        return -1;
+      };
+
+      const nameIdx = findHeaderIndex(["variable name"]);
+      const typeIdx = findHeaderIndex(["data type"]);
+      const descIdx = findHeaderIndex(["variable description"]);
+      const stringLenIdx = findHeaderIndex(["string length"]);
 
       const fileName = path.basename(fileUri.fsPath, ".csv");
       const objectName = fileName;
 
       const properties: PropertyInfo[] = [];
+      for (let r = 1; r < rows.length; r++) {
+        const row = rows[r];
 
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) {
+        let a = Number.isNaN(row.fields[0]);
+        if (row.fields[0] === "") {
           continue;
         }
 
-        const parts = line
-          .split(",")
-          .map((p) => p.trim().replace(/^["']|["']$/g, ""));
+        const cols = row.fields.map((c) =>
+          c.replace(/^['\"]|['\"]$/g, "").trim()
+        );
+        const name = cols[nameIdx >= 0 ? nameIdx : 0] || "";
+        let rawType = (typeIdx >= 0 ? cols[typeIdx] : cols[1] || "").toString();
+        rawType = rawType.trim();
 
-        if (parts.length >= 2) {
-          const name = parts[0];
-          const type = parts[1];
+        // map common vendor types to normalized types
+        const t = rawType.toLowerCase();
+        let mappedType = "any";
+        if (
+          t.includes("char") ||
+          t.includes("string") ||
+          t.includes("varchar") ||
+          t.includes("text")
+        ) {
+          mappedType = "string";
+        } else if (
+          t.includes("int") ||
+          t.includes("float") ||
+          t.includes("double") ||
+          t.includes("number") ||
+          t.includes("uint") ||
+          t.includes("short") ||
+          t.includes("long")
+        ) {
+          mappedType = "number";
+        } else if (t.includes("bool")) {
+          mappedType = "boolean";
+        } else if (t.length === 0) {
+          mappedType = "any";
+        } else {
+          mappedType = t; // unknown type, keep raw
+        }
 
-          if (name && type) {
-            properties.push({ name, type });
+        const description =
+          descIdx >= 0 ? cols[descIdx] || undefined : undefined;
+        let stringLength: number | undefined;
+        if (stringLenIdx >= 0) {
+          const sl = parseInt(cols[stringLenIdx] || "", 10);
+          if (!isNaN(sl)) {
+            stringLength = sl;
           }
+        }
+
+        if (name) {
+          const prop: PropertyInfo = {
+            name,
+            type: mappedType,
+            sourceLine: row.line,
+            rawType: rawType,
+          };
+          if (description) {
+            prop.description = description;
+          }
+          if (mappedType === "string" && stringLength !== undefined) {
+            prop.stringLength = stringLength;
+          }
+          properties.push(prop);
         }
       }
 
@@ -441,86 +619,22 @@ class HaiwellScriptCompletionProvider implements vscode.CompletionItemProvider {
         : undefined;
     }
 
-    if (linePrefix.endsWith("$")) {
-      const items = await this.getUserVariable(document);
-      return new vscode.CompletionList(items, false);
-    }
+    // if (linePrefix.endsWith("$")) {
+    //   const items = await this.getUserVariable(document);
+    //   return new vscode.CompletionList(items, false);
+    // }
 
     const items = await this.getObjectCompletions(document);
     return new vscode.CompletionList(items, false);
-  }
-
-  private async getUserVariable(
-    document: vscode.TextDocument
-  ): Promise<vscode.CompletionItem[]> {
-    const completions: vscode.CompletionItem[] = [];
-    const cache = ProjectObjectCache.getInstance();
-    const definedObjects = cache.getDefinedObjects();
-    const projectObjects = await cache.getProjectObjects();
-    const addedObjects = new Set<string>();
-
-    // User defined objects
-    for (const objectName of definedObjects) {
-      if (addedObjects.has(objectName)) {
-        continue;
-      }
-
-      const definition = cache.getObjectDefinition(objectName);
-      if (!definition) {
-        continue;
-      }
-
-      const item = new vscode.CompletionItem(
-        `\$${objectName}`,
-        vscode.CompletionItemKind.Class
-      );
-      item.detail = `${objectName} (defined)`;
-      item.insertText = `\$${objectName}`;
-      item.sortText = `1${objectName}`;
-
-      const propPreview = definition.properties
-        .slice(0, 5)
-        .map((p) => `${p.name}: ${p.type}`)
-        .join(", ");
-
-      item.documentation = new vscode.MarkdownString(
-        `**${objectName}**\n\nDefined in: \`${path.basename(
-          definition.sourceFile
-        )}\`\n\n**Properties**: ${propPreview}`
-      );
-
-      completions.push(item);
-      addedObjects.add(objectName);
-    }
-
-    // Used but undefined objects
-    for (const [objectName, usage] of projectObjects.entries()) {
-      if (addedObjects.has(objectName)) {
-        continue;
-      }
-
-      const item = new vscode.CompletionItem(
-        `\$${objectName}`,
-        vscode.CompletionItemKind.Reference
-      );
-      item.detail = `${objectName} (⚠️ undefined)`;
-      item.insertText = `\$${objectName}`;
-      item.sortText = `3${objectName}`;
-
-      item.documentation = new vscode.MarkdownString(
-        `**${objectName}**\n\n⚠️ Not defined in variable directory`
-      );
-
-      completions.push(item);
-    }
-
-    return completions;
   }
 
   private async getObjectCompletions(
     document: vscode.TextDocument
   ): Promise<vscode.CompletionItem[]> {
     const completions: vscode.CompletionItem[] = [];
+    const cache = ProjectObjectCache.getInstance();
+    const definedObjects = cache.getDefinedObjects();
+    const projectObjects = await cache.getProjectObjects();
     const addedObjects = new Set<string>();
 
     // Collect local variables and functions declared in the current document
@@ -599,6 +713,61 @@ class HaiwellScriptCompletionProvider implements vscode.CompletionItemProvider {
       addedObjects.add(objectName);
     }
 
+    // User defined objects
+    for (const objectName of definedObjects) {
+      if (addedObjects.has(objectName)) {
+        continue;
+      }
+
+      const definition = cache.getObjectDefinition(objectName);
+      if (!definition) {
+        continue;
+      }
+
+      const item = new vscode.CompletionItem(
+        `\$${objectName}`,
+        vscode.CompletionItemKind.Class
+      );
+      item.detail = `${objectName} (defined)`;
+      item.insertText = `\$${objectName}`;
+      item.sortText = `1${objectName}`;
+
+      const propPreview = definition.properties
+        .slice(0, 5)
+        .map((p) => `${p.name}: ${p.type}`)
+        .join(", ");
+
+      item.documentation = new vscode.MarkdownString(
+        `**${objectName}**\n\nDefined in: \`${path.basename(
+          definition.sourceFile
+        )}\`\n\n**Properties**: ${propPreview}`
+      );
+
+      completions.push(item);
+      addedObjects.add(objectName);
+    }
+
+    // Used but undefined objects
+    for (const [objectName, usage] of projectObjects.entries()) {
+      if (addedObjects.has(objectName)) {
+        continue;
+      }
+
+      const item = new vscode.CompletionItem(
+        `\$${objectName}`,
+        vscode.CompletionItemKind.Reference
+      );
+      item.detail = `${objectName} (⚠️ undefined)`;
+      item.insertText = `\$${objectName}`;
+      item.sortText = `3${objectName}`;
+
+      item.documentation = new vscode.MarkdownString(
+        `**${objectName}**\n\n⚠️ Not defined in variable directory`
+      );
+
+      completions.push(item);
+    }
+
     return completions;
   }
 
@@ -626,22 +795,23 @@ class HaiwellScriptCompletionProvider implements vscode.CompletionItemProvider {
       );
       item.detail = `${prop.name}: ${prop.type}`;
       item.insertText = prop.name;
-      item.documentation = new vscode.MarkdownString(
-        `Property **${prop.name}** of type \`${prop.type}\``
-      );
+      const md = new vscode.MarkdownString();
+      md.appendMarkdown(`**${prop.name}**  \n`);
+      // md.appendMarkdown(`Type: \`${prop.type}\``);
+      if (prop.rawType !== undefined) {
+        md.appendMarkdown(`  \n\nHaiwell Type: **${prop.rawType}**`);
+      }
+      if (prop.type === "string" && prop.stringLength !== undefined) {
+        md.appendMarkdown(`  \n\nString length: **${prop.stringLength}**`);
+      }
+      if (prop.description) {
+        md.appendMarkdown(`  \n\n${prop.description}`);
+      }
+      item.documentation = md;
       return item;
     });
   }
 
-  /**
-   * Extract properties from a local object literal defined in the current document.
-   * Supports patterns like:
-   *   var foo = { a: 1, b: 2 };
-   *   let foo = {
-   *     a: 1,
-   *     'b': 2
-   *   };
-   */
   private getLocalObjectProperties(
     objectName: string,
     document: vscode.TextDocument
@@ -721,6 +891,14 @@ class HaiwellScriptHoverProvider implements vscode.HoverProvider {
       const prop = properties.find((p) => p.name === propertyName);
       if (prop) {
         markdown.appendMarkdown(`\n\nType: \`${prop.type}\``);
+        if (prop.type === "string" && prop.stringLength !== undefined) {
+          markdown.appendMarkdown(
+            `\n\nString length: **${prop.stringLength}**`
+          );
+        }
+        if (prop.description) {
+          markdown.appendMarkdown(`\n\n${prop.description}`);
+        }
       }
     } else {
       markdown.appendCodeblock(`$${objectName}`, "hwscript");
@@ -750,23 +928,72 @@ class HaiwellScriptDefinitionProvider implements vscode.DefinitionProvider {
     position: vscode.Position,
     token: vscode.CancellationToken
   ): Promise<vscode.Definition | undefined> {
-    const range = document.getWordRangeAtPosition(position, /\$\w+/);
+    const range = document.getWordRangeAtPosition(position);
     if (!range) {
       return undefined;
     }
 
-    const text = document.getText(range);
-    const match = text.match(/\$(\w+)/);
-    if (!match) {
-      return undefined;
+    const objectName = document.getText(range);
+    const cache = ProjectObjectCache.getInstance();
+
+    // First try to find a local declaration in the current document (var or function)
+    const declarationRegexes = [
+      new RegExp("\\b(?:var)\\s+" + objectName + "\\b"),
+      new RegExp("\\bfunction\\s+" + objectName + "\\s*\\("),
+      new RegExp("^\\s*" + objectName + "\\s*=", "m"),
+    ];
+
+    // Search the current document first
+    for (let i = 0; i < document.lineCount; i++) {
+      const line = document.lineAt(i).text;
+      if (declarationRegexes.some((re) => re.test(line))) {
+        const col = line.indexOf(objectName);
+        return new vscode.Location(
+          document.uri,
+          new vscode.Position(i, col >= 0 ? col : 0)
+        );
+      }
     }
 
-    const objectName = match[1];
-    const cache = ProjectObjectCache.getInstance();
-    const definition = cache.getObjectDefinition(objectName);
+    // Search any open workspace documents (fast) for a declaration
+    for (const doc of vscode.workspace.textDocuments) {
+      if (doc.uri.toString() === document.uri.toString()) {
+        continue; // already checked
+      }
+      try {
+        for (let i = 0; i < doc.lineCount; i++) {
+          const line = doc.lineAt(i).text;
+          if (declarationRegexes.some((re) => re.test(line))) {
+            const col = line.indexOf(objectName);
+            return new vscode.Location(
+              doc.uri,
+              new vscode.Position(i, col >= 0 ? col : 0)
+            );
+          }
+        }
+      } catch (err) {
+        // ignore and continue
+      }
+    }
 
+    // Fall back to variable CSV definition if present
+    const definition = cache.getObjectDefinition(objectName);
     if (definition) {
       const uri = vscode.Uri.file(definition.sourceFile);
+      // try to open the file and find the property line if possible
+      try {
+        const doc = await vscode.workspace.openTextDocument(uri);
+        for (let i = 0; i < doc.lineCount; i++) {
+          const line = doc.lineAt(i).text;
+          // CSV lines typically contain the property name in the first column
+          if (line.match(new RegExp("^\\s*" + objectName + "\\b"))) {
+            return new vscode.Location(uri, new vscode.Position(i, 0));
+          }
+        }
+      } catch (err) {
+        // ignore
+      }
+
       return new vscode.Location(uri, new vscode.Position(0, 0));
     }
 
