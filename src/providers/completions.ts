@@ -83,7 +83,7 @@ export class HaiwellScriptCompletionProvider
                     item.insertText = name;
                     item.sortText = `0${name}`;
                     item.documentation = new vscode.MarkdownString(
-                        `Local function **${name}()`
+                        `local function **${name}()`
                     );
                     completions.push(item);
                     addedObjects.add(name);
@@ -116,7 +116,7 @@ export class HaiwellScriptCompletionProvider
                 item.insertText = g.name;
                 item.sortText = `0g${g.name}`;
                 item.documentation = new vscode.MarkdownString(
-                    `Defined in: \`${path.basename(g.sourceFile)}\``
+                    `defined in: \`${path.basename(g.sourceFile)}\``
                 );
                 completions.push(item);
                 addedObjects.add(g.name);
@@ -142,16 +142,22 @@ export class HaiwellScriptCompletionProvider
 
             const propPreview = properties
                 .slice(0, 5)
-                .map((p) => `${p.name}: ${p.type}`)
-                .join(", ");
+                .map((p) => `- ${p.name}`)
+                .join("\n")
+                .concat("\n- ...");
+
             item.documentation = new vscode.MarkdownString(
-                `Predefined **${objectName}**\n\n**Properties**: ${propPreview}`
+                `## ${objectName}\n` +
+                    "---\n\n" +
+                    "Properties:\n" +
+                    `${propPreview}`
             );
 
             completions.push(item);
             addedObjects.add(objectName);
         }
 
+        // Predefined Variables
         for (const [name, info] of Object.entries(PREDEFINED_VARIABLES)) {
             const varName = `\$${name.replace(/^_/, "")}`;
 
@@ -162,13 +168,10 @@ export class HaiwellScriptCompletionProvider
             let doc;
             if (info.description) {
                 doc =
-                    `## ${varName}\n\n` +
-                    `**haiwell type**: ${info.rawType}\n\n` +
-                    `**description**: ${info.description}`;
+                    `## ${varName} : \`${info.rawType}\`\n\n` +
+                    `${info.description}\n\n`;
             } else {
-                doc =
-                    `## ${varName}\n\n` +
-                    `**haiwell type**: ${info.rawType}\n\n`;
+                doc = `## ${varName} : \`${info.rawType}\`\n\n`;
             }
 
             const item = new vscode.CompletionItem(
@@ -204,13 +207,17 @@ export class HaiwellScriptCompletionProvider
 
             const propPreview = definition.properties
                 .slice(0, 5)
-                .map((p) => `${p.name}: ${p.type}`)
-                .join(", ");
+                .map((p) => `- ${p.name}`)
+                .join("\n")
+                .concat("\n- ...");
 
+            const f_path = path.basename(definition.sourceFile);
             item.documentation = new vscode.MarkdownString(
-                `**${objectName}**\n\nDefined in: \`${path.basename(
-                    definition.sourceFile
-                )}\`\n\n**Properties**: ${propPreview}`
+                `## \$${objectName}\n` +
+                    "---\n\n" +
+                    "**properties**:\n" +
+                    `${propPreview}\n\n` +
+                    `**location**:\`${f_path}\``
             );
 
             completions.push(item);
@@ -237,7 +244,7 @@ export class HaiwellScriptCompletionProvider
             item.sortText = `3${objectName}`;
 
             item.documentation = new vscode.MarkdownString(
-                `**${objectName}**\n\n⚠️ Not defined in variable directory`
+                `**${objectName}**\n\n` + "⚠️ Not defined in variable directory"
             );
 
             completions.push(item);
@@ -270,20 +277,25 @@ export class HaiwellScriptCompletionProvider
             );
             item.detail = `${prop.name}: ${prop.type}`;
             item.insertText = prop.name;
+
             const md = new vscode.MarkdownString();
-            md.appendMarkdown(`**${prop.name}**  \n`);
-            // md.appendMarkdown(`Type: \`${prop.type}\``);
-            if (prop.rawType !== undefined) {
-                md.appendMarkdown(`  \n\nHaiwell Type: **${prop.rawType}**`);
+
+            let name;
+            if (prop.rawType === undefined) {
+                md.appendMarkdown(`## ${prop.name} : \`any\`\n\n`);
+            } else {
+                md.appendMarkdown(`## ${prop.name} : \`${prop.rawType}\`\n\n`);
             }
-            if (prop.type === "string" && prop.stringLength !== undefined) {
-                md.appendMarkdown(
-                    `  \n\nString length: **${prop.stringLength}**`
-                );
-            }
+
             if (prop.description) {
-                md.appendMarkdown(`  \n\n${prop.description}`);
+                md.appendMarkdown(`${prop.description}\n`);
             }
+
+            if (prop.type === "string" && prop.stringLength !== undefined) {
+                md.appendMarkdown("---\n");
+                md.appendMarkdown(`**length**: ${prop.stringLength}`);
+            }
+
             item.documentation = md;
             return item;
         });
