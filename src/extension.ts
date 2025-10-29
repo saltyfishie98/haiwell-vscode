@@ -5,11 +5,21 @@ import { HaiwellScriptHoverProvider } from "./providers/hover";
 import { HaiwellScriptDefinitionProvider } from "./providers/definition";
 import { HaiwellScriptDocumentSymbolProvider } from "./providers/document_symbol";
 
-export function activate(context: vscode.ExtensionContext): void {
+export async function activate(
+    context: vscode.ExtensionContext
+): Promise<void> {
     console.log("Haiwell Script extension is now active");
 
     const cache = ProjectObjectCache.getInstance();
-    cache.initialize();
+    // Ensure variable and lib definitions are loaded before registering providers
+    try {
+        await cache.initialize();
+        console.log(
+            "Haiwell Script cache initialized (variables + lib definitions)"
+        );
+    } catch (err) {
+        console.error("Error initializing Haiwell Script cache:", err);
+    }
 
     const variableWatcher =
         vscode.workspace.createFileSystemWatcher("**/variable/*.csv");
@@ -43,11 +53,13 @@ export function activate(context: vscode.ExtensionContext): void {
         }
     );
 
-    const docSaveListener = vscode.workspace.onDidSaveTextDocument((document) => {
-        if (document.languageId === "hwscript") {
-            cache.updateDocument(document);
+    const docSaveListener = vscode.workspace.onDidSaveTextDocument(
+        (document) => {
+            if (document.languageId === "hwscript") {
+                cache.updateDocument(document);
+            }
         }
-    });
+    );
 
     const diagnosticCollection =
         vscode.languages.createDiagnosticCollection("hwscript");
@@ -69,7 +81,10 @@ export function activate(context: vscode.ExtensionContext): void {
 
                 if (!cache.isObjectDefined(objectName)) {
                     const startPos = new vscode.Position(i, match.index);
-                    const endPos = new vscode.Position(i, match.index + match[0].length);
+                    const endPos = new vscode.Position(
+                        i,
+                        match.index + match[0].length
+                    );
                     const range = new vscode.Range(startPos, endPos);
 
                     const diagnostic = new vscode.Diagnostic(
@@ -87,7 +102,9 @@ export function activate(context: vscode.ExtensionContext): void {
     };
 
     vscode.workspace.onDidOpenTextDocument(validateDocument);
-    vscode.workspace.onDidChangeTextDocument((e) => validateDocument(e.document));
+    vscode.workspace.onDidChangeTextDocument((e) =>
+        validateDocument(e.document)
+    );
     vscode.workspace.textDocuments.forEach(validateDocument);
 
     const completionProvider = vscode.languages.registerCompletionItemProvider(
@@ -153,6 +170,3 @@ export function activate(context: vscode.ExtensionContext): void {
 export function deactivate(): void {
     ProjectObjectCache.getInstance().clear();
 }
-
-
-
