@@ -1,0 +1,65 @@
+function timestamp_to_datetime(timestamp) {
+    // Get seconds since the start of the day (00:00:00)
+    // 86400 = seconds in a day (24 * 60 * 60)
+    timestamp = timestamp + (8 * 60 * 60 * 1000);
+    var secondsToday = (timestamp / 1000) % 86400;
+
+    // Extract time components
+    var hours = Math.floor(secondsToday / 3600);
+    var minutes = Math.floor((secondsToday % 3600) / 60);
+    var seconds = secondsToday % 60;
+
+    // Format with leading zeros
+    var formattedHours = String(hours).padStart(2, '0');
+    var formattedMinutes = String(minutes).padStart(2, '0');
+    var formattedSeconds = String(seconds).padStart(2, '0');
+
+    return formattedHours + ":" + formattedMinutes + ":" + formattedSeconds;
+}
+
+function publish_entry(unique_id, sku) {
+	$Publish.et_sku = sku;
+	$Publish.et_unique_id = unique_id;
+	$Publish.et_batch_status = true;
+	$Publish.et_e_terminal_time = $System.timestamp;
+	$Publish.e_publish_type = 1;
+
+	$Process.log_batch_start = !$Process.log_batch_start;
+	$Publish.entry_event_queued = true;
+}
+
+function publish_details(start_time, unique_id, sku) {
+	Common.logger.log("batch start, " + $System.timestamp);
+	$Publish.dt_status_id = $Process.machine_running && $Process.batch_running;
+	$Publish.dt_unique_id = unique_id;
+	$Publish.dt_sku = sku;
+	$Publish.dt_start_time = start_time;
+	$Publish.dt_e_terminal_time = $System.timestamp;
+	$Publish.dt_e_down_stage = $System.machine_data_down_stage;
+	$Publish.e_publish_type = 1;
+	$Publish.e_machine_status = $Process.machine_running;
+
+	$Publish.details_event_queued = true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+if (!$System.initialized) { return; }
+var start_time = $System.timestamp;
+
+$Process.batch_start_datetime_str = $Date + " " + timestamp_to_datetime(parseInt(start_time));
+$Process.batch_start_time = start_time;
+$Process.batch_prev_count = -1;
+$Process.data_timestamp = "";
+
+$Mqtt.prev_count = -1;
+$Mqtt.prev_time = "";
+
+$System.machine_data_timer = 0;
+$System.machine_data_current_down_duration = 0;
+
+var unique_id = $Process.batch_id;
+var sku = $Process.part_number;
+
+publish_entry(unique_id, sku);
+publish_details(start_time, unique_id, sku);

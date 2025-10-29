@@ -110,6 +110,37 @@ class ProjectObjectCache {
       }
     }
 
+    // Also load definitions from `lib` directory: .csv, .ts and .js
+    for (const folder of workspaceFolders) {
+      try {
+        const libPattern = new vscode.RelativePattern(
+          folder,
+          "lib/**/*.{csv,ts,js}"
+        );
+        const libFiles = await vscode.workspace.findFiles(libPattern, null, 1000);
+        if (libFiles.length > 0) {
+          console.log(`Found ${libFiles.length} file(s) under lib/ to parse`);
+        }
+
+        for (const libFile of libFiles) {
+          try {
+            const ext = path.extname(libFile.fsPath).toLowerCase();
+            if (ext === ".csv") {
+              console.log(`Parsing lib CSV: ${libFile.fsPath}`);
+              await this.parseVariableCSV(libFile);
+            } else if (ext === ".ts" || ext === ".js") {
+              console.log(`Parsing lib script: ${libFile.fsPath}`);
+              await this.parseScriptFile(libFile);
+            }
+          } catch (err) {
+            console.error(`Error parsing lib file ${libFile.fsPath}:`, err);
+          }
+        }
+      } catch (err) {
+        console.error("Error scanning lib directory:", err);
+      }
+    }
+
     console.log(
       `Loaded ${this.variableDefinitions.size} variable definitions from CSV files`
     );
@@ -339,6 +370,151 @@ class ProjectObjectCache {
     }
   }
 
+  async parseScriptFile(fileUri: vscode.Uri): Promise<void> {
+    try {
+      const document = await vscode.workspace.openTextDocument(fileUri);
+      const text = document.getText();
+
+      const addObject = (objectName: string, body: string) => {
+        const props = new Set<string>();
+        try {
+          const keyRegex = /(?:['"])?([A-Za-z_][A-Za-z0-9_]*)(?:['"])?\s*:/g;
+          let m: RegExpExecArray | null;
+          while ((m = keyRegex.exec(body)) !== null) {
+            props.add(m[1]);
+          }
+        } catch (err) {
+          // ignore
+        }
+
+        const properties: PropertyInfo[] = Array.from(props).map((name) => ({
+          name,
+          type: "any",
+        }));
+
+        if (properties.length > 0) {
+          this.variableDefinitions.set(objectName, {
+            objectName,
+            properties,
+            sourceFile: fileUri.fsPath,
+          });
+        }
+      };
+
+      // helper to find balanced brace body starting at index of '{'
+      const extractBraceBody = (startIdx: number): { body: string; endIdx: number } | null => {
+        let i = startIdx;
+        const len = text.length;
+        if (text[i] !== "{") {
+          return null;
+        }
+        let depth = 0;
+        i++;
+        let bodyStart = i;
+        for (; i < len; i++) {
+          const ch = text[i];
+          if (ch === "{") {
+            depth++;
+          } else if (ch === "}") {
+            if (depth === 0) {
+              const body = text.substring(bodyStart, i);
+              return { body, endIdx: i };
+            } else {
+              depth--;
+            }
+          } else if (ch === '"' || ch === "'") {
+            // skip string literal
+            const quote = ch;
+            i++;
+            while (i < len) {
+              if (text[i] === "\\") {
+                i += 2; // skip escaped
+                continue;
+              }
+              if (text[i] === quote) {
+                break;
+              }
+              i++;
+            }
+          } else if (ch === "/") {
+            // skip comments // or /* */
+            if (i + 1 < len && text[i + 1] === "/") {
+              i += 2;
+              while (i < len && text[i] !== "\n") {
+                i++;
+              }
+            } else if (i + 1 < len && text[i + 1] === "*") {
+              i += 2;
+              while (i + 1 < len && !(text[i] === "*" && text[i + 1] === "/")) {
+                i++;
+              }
+              i += 1; // will be incremented by for-loop
+            }
+          }
+        }
+        return null;
+      };
+
+      // pattern: (export )?(const|let|var) NAME = {
+      const declRegex = /\b(?:export\s+)?(?:const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\{/g;
+      let m: RegExpExecArray | null;
+      while ((m = declRegex.exec(text)) !== null) {
+        const name = m[1];
+        const braceIdx = text.indexOf("{", m.index + m[0].length - 1);
+        if (braceIdx >= 0) {
+          const res = extractBraceBody(braceIdx);
+          if (res) {
+            addObject(name, res.body);
+            // move regex index forward to avoid nested matches inside body
+            declRegex.lastIndex = res.endIdx + 1;
+          }
+        }
+      }
+
+      // pattern: exports.NAME = {
+      const expRegex = /\b(?:module\.exports|exports)\.([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\{/g;
+      while ((m = expRegex.exec(text)) !== null) {
+        const name = m[1];
+        const braceIdx = text.indexOf("{", m.index + m[0].length - 1);
+        if (braceIdx >= 0) {
+          const res = extractBraceBody(braceIdx);
+          if (res) {
+            addObject(name, res.body);
+            expRegex.lastIndex = res.endIdx + 1;
+          }
+        }
+      }
+
+      // pattern: module.exports = { NAME: { ... }, ... }
+      const modExpRoot = /\bmodule\.exports\s*=\s*\{/g;
+      if ((m = modExpRoot.exec(text)) !== null) {
+        const braceIdx = text.indexOf("{", m.index + m[0].length - 1);
+        if (braceIdx >= 0) {
+          const root = extractBraceBody(braceIdx);
+          if (root) {
+            // find properties inside root.body that are object literals
+            const keyObjRegex = /(?:['"])?([A-Za-z_][A-Za-z0-9_]*)(?:['"])?\s*:\s*\{/g;
+            let k: RegExpExecArray | null;
+            const rootBody = root.body;
+            while ((k = keyObjRegex.exec(rootBody)) !== null) {
+              const innerBraceIdxInRoot = keyObjRegex.lastIndex - 1;
+              // convert to global text index
+              const globalStart = braceIdx + 1 + innerBraceIdxInRoot;
+              const innerRes = extractBraceBody(globalStart);
+              if (innerRes) {
+                addObject(k[1], innerRes.body);
+                // advance
+                keyObjRegex.lastIndex = innerRes.endIdx - braceIdx - 1;
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error(`Error parsing script file ${fileUri.fsPath}:`, err);
+    }
+  }
+
   getDefinedObjects(): string[] {
     return Array.from(this.variableDefinitions.keys());
   }
@@ -474,6 +650,14 @@ export function activate(context: vscode.ExtensionContext): void {
   variableWatcher.onDidCreate(() => cache.loadVariableDefinitions());
   variableWatcher.onDidDelete(() => cache.loadVariableDefinitions());
 
+  // Watch lib directory for csv / ts / js changes
+  const libWatcher = vscode.workspace.createFileSystemWatcher(
+    "**/lib/**/*.{csv,ts,js}"
+  );
+  libWatcher.onDidChange(() => cache.loadVariableDefinitions());
+  libWatcher.onDidCreate(() => cache.loadVariableDefinitions());
+  libWatcher.onDidDelete(() => cache.loadVariableDefinitions());
+
   const fileWatcher = vscode.workspace.createFileSystemWatcher(
     "**/*.{hws,hwscript}"
   );
@@ -524,7 +708,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
           const diagnostic = new vscode.Diagnostic(
             range,
-            `Object '$${objectName}' is not defined in variable directory`,
+            `Object '$${objectName}' is not defined in variable directory or lib`,
             vscode.DiagnosticSeverity.Warning
           );
           diagnostic.source = "hwscript";
@@ -592,6 +776,7 @@ export function activate(context: vscode.ExtensionContext): void {
     documentSymbolProvider,
     fileWatcher,
     variableWatcher,
+    libWatcher,
     docChangeListener,
     docSaveListener,
     diagnosticCollection,
@@ -1002,8 +1187,7 @@ class HaiwellScriptDefinitionProvider implements vscode.DefinitionProvider {
 }
 
 class HaiwellScriptDocumentSymbolProvider
-  implements vscode.DocumentSymbolProvider
-{
+  implements vscode.DocumentSymbolProvider {
   provideDocumentSymbols(
     document: vscode.TextDocument,
     token: vscode.CancellationToken
