@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-export let Common = {
+export const Common = {
     MobileBarcodescanner: function () {
         console.log("执行脚本");
         //执行app扫码枪
@@ -149,7 +149,10 @@ export let Common = {
             if (typeof callback != "undefined") {
                 if (script.readyState) {
                     script.onreadystatechange = function () {
-                        if (script.readyState == "loaded" || script.readyState == "complete") {
+                        if (
+                            script.readyState == "loaded" ||
+                            script.readyState == "complete"
+                        ) {
                             script.onreadystatechange = null;
                             callback();
                         }
@@ -235,21 +238,49 @@ export let Common = {
                 options.res = data;
                 //寻找对应的通讯脚本
                 var communFunction =
-                    (options.symId ? Utils.onIdGetAttr(options.symId, "sym-type") + "_" : "") + "onget_" + options["type"];
-                var symElement = options.symId ? document.getElementById(options.symId) : undefined;
+                    (options.symId
+                        ? Utils.onIdGetAttr(options.symId, "sym-type") + "_"
+                        : "") +
+                    "onget_" +
+                    options["type"];
+                var symElement = options.symId
+                    ? document.getElementById(options.symId)
+                    : undefined;
                 if (options["winId"]) {
                     //有winId
-                    if (!ProjectScript.frame["frame_" + options["winId"]]) { return; }
-                    if (!ProjectScript.frame["frame_" + options["winId"]][communFunction]) { return; }
+                    if (!ProjectScript.frame["frame_" + options["winId"]]) {
+                        return;
+                    }
+                    if (
+                        !ProjectScript.frame["frame_" + options["winId"]][
+                            communFunction
+                        ]
+                    ) {
+                        return;
+                    }
                     //执行对应的脚本
-                    ProjectScript.frame["frame_" + options["winId"]][communFunction](options, "get", symElement);
+                    ProjectScript.frame["frame_" + options["winId"]][
+                        communFunction
+                    ](options, "get", symElement);
                 } else {
                     //没有winId
                     var i = 0;
                     for (; i < CurrentActivityFrameList.length; i++) {
-                        if (!ProjectScript.frame["frame_" + CurrentActivityFrameList[i]]) continue;
-                        if (!ProjectScript.frame["frame_" + CurrentActivityFrameList[i]][communFunction]) continue;
-                        ProjectScript.frame["frame_" + CurrentActivityFrameList[i]][communFunction](options, "get", symElement);
+                        if (
+                            !ProjectScript.frame[
+                                "frame_" + CurrentActivityFrameList[i]
+                            ]
+                        )
+                            continue;
+                        if (
+                            !ProjectScript.frame[
+                                "frame_" + CurrentActivityFrameList[i]
+                            ][communFunction]
+                        )
+                            continue;
+                        ProjectScript.frame[
+                            "frame_" + CurrentActivityFrameList[i]
+                        ][communFunction](options, "get", symElement);
                     }
                 }
                 //callback(options);
@@ -272,17 +303,27 @@ export let Common = {
         //字符串转数组
         eleIds = eleIds.split(",");
         eleIds.map(function (eleId) {
-            if (!eleId) { return; }
+            if (!eleId) {
+                return;
+            }
             var currentElement = document.getElementById(eleId);
             // console.log(currentElement,'currentElement');
-            if (!currentElement) { return; }
+            if (!currentElement) {
+                return;
+            }
             //变量名
-            var symNameVar = currentElement.GetAttr("sym-type") + "_on" + commumType + "_" + options["type"];
+            var symNameVar =
+                currentElement.GetAttr("sym-type") +
+                "_on" +
+                commumType +
+                "_" +
+                options["type"];
             // console.log(symNameVar,'symNameVar');
             //变量脚本
             symScriptVar = frameScript[symNameVar];
             // console.log(symScriptVar,'symScriptVar');
-            if (symScriptVar != undefined) symScriptVar(options, commumType, currentElement);
+            if (symScriptVar != undefined)
+                symScriptVar(options, commumType, currentElement);
         });
     },
 
@@ -298,7 +339,7 @@ export let Common = {
         setting();
     },
 
-    SendKey: function (keyCode) { },
+    SendKey: function (keyCode) {},
 
     testEnd: function () {
         alert("老化工程结束！");
@@ -326,9 +367,15 @@ export let Common = {
                 console.log("CloudInfoBox start");
                 hai.use("popupbox", function () {
                     if (typeof sysLang.cloudEngineConn != "undefined") {
-                        GlobalVar.CloudShowInfo = hai.popupbox(sysLang.cloudEngineConn, options);
+                        GlobalVar.CloudShowInfo = hai.popupbox(
+                            sysLang.cloudEngineConn,
+                            options
+                        );
                     } else {
-                        GlobalVar.CloudShowInfo = hai.popupbox("云引擎联机中...", options);
+                        GlobalVar.CloudShowInfo = hai.popupbox(
+                            "云引擎联机中...",
+                            options
+                        );
                     }
                     //title: '我是标题', showCancelButton: true
                 });
@@ -428,8 +475,7 @@ export let Common = {
                 speed: speed,
                 symId: symId,
             });
-        },
-            500);
+        }, 500);
     },
 
     cameraSnapshot: function (camid, symId) {
@@ -456,7 +502,9 @@ export let Common = {
         } else {
             if (ID.indexOf("tempId") > -1) {
                 var curSymId = ID.replace(/tempId/, "");
-                var isBeepSound = document.getElementById(curSymId).getAttribute("beep");
+                var isBeepSound = document
+                    .getElementById(curSymId)
+                    .getAttribute("beep");
                 if (!isBeepSound) {
                     Common.Bee();
                 }
@@ -495,7 +543,7 @@ export let Common = {
         return val;
     },
 
-    AddFile: function (fileName, filePath) { },
+    AddFile: function (fileName, filePath) {},
 
     uint8Array2uint16Array: function (uint8Array) {
         var uint16Array = new Uint16Array(uint8Array.length / 2);
@@ -523,13 +571,13 @@ export let Common = {
         console.log("仅支持后台运行");
     },
 
-    ReadFile: function (filePath) { },
+    ReadFile: function (filePath) {},
 
-    WriteFile: function (filePath, data) { },
+    WriteFile: function (filePath, data) {},
 
-    RenameFile: function (oldName, newName, filePath) { },
+    RenameFile: function (oldName, newName, filePath) {},
 
-    DeleteFile: function (filePath) { },
+    DeleteFile: function (filePath) {},
 
     BoolToInt: function (bool) {
         if (true === bool) {
@@ -551,54 +599,62 @@ export let Common = {
         var xtype = typeof x;
         var ytype = typeof y;
         if ("number" != xtype || "number" != ytype) {
-            { return; }
+            {
+                return;
+            }
         }
         return x & y;
     },
 
-    BufferCreate: function (zoneCode, zoneLen) { },
+    BufferCreate: function (zoneCode, zoneLen) {},
 
-    BufferGetAt: function (zoneCode, zoneLen) { },
+    BufferGetAt: function (zoneCode, zoneLen) {},
 
-    BufferSetAt: function (zoneCode, zoneLen, data) { },
+    BufferSetAt: function (zoneCode, zoneLen, data) {},
 
-    BufferStoreToFile: function (zoneCode, fileName, callback) { },
+    BufferStoreToFile: function (zoneCode, fileName, callback) {},
 
-    BufferLoadFromFile: function (zoneCode, fileName, callback) { },
+    BufferLoadFromFile: function (zoneCode, fileName, callback) {},
 
-    DelDataGroup: function (callback, options) { },
+    DelDataGroup: function (callback, options) {},
 
-    DelAlertRecord: function (callback, options) { },
+    DelAlertRecord: function (callback, options) {},
 
-    DelHistoryRecord: function (callback, options) { },
+    DelHistoryRecord: function (callback, options) {},
 
-    CreateOrOpenDatabase: function (type, databasePath, cb) { },
+    CreateOrOpenDatabase: function (type, databasePath, cb) {},
 
-    CloseDatabase: function (type, databasePath, cb) { },
+    CloseDatabase: function (type, databasePath, cb) {},
 
-    DeleteDatabase: function (type, databasePath, cb) { },
+    DeleteDatabase: function (type, databasePath, cb) {},
 
-    CopyDatabase: function (sourceType, sourceDatabasePath, targetType, targetDatabasePath, cb) { },
+    CopyDatabase: function (
+        sourceType,
+        sourceDatabasePath,
+        targetType,
+        targetDatabasePath,
+        cb
+    ) {},
 
-    QueryDatabase: function (type, databasePath, sql, sucCallback, cb) { },
+    QueryDatabase: function (type, databasePath, sql, sucCallback, cb) {},
 
-    TraQueryDatabase: function (curDataBase, sql, sucCallback, callback) { },
+    TraQueryDatabase: function (curDataBase, sql, sucCallback, callback) {},
 
-    RunDatabase: function (type, databasePath, sql, sucCallback, cb) { },
+    RunDatabase: function (type, databasePath, sql, sucCallback, cb) {},
 
-    TraRunDatabase: function (curDataBase, sql, sucCallback, callback) { },
+    TraRunDatabase: function (curDataBase, sql, sucCallback, callback) {},
 
-    ExecDatabase: function (type, databasePath, sqlMore, sucCallback, cb) { },
+    ExecDatabase: function (type, databasePath, sqlMore, sucCallback, cb) {},
 
-    TraExecDatabase: function (curDataBase, sql, sucCallback, callback) { },
+    TraExecDatabase: function (curDataBase, sql, sucCallback, callback) {},
 
-    TraStaDatabase: function (curDataBase) { },
+    TraStaDatabase: function (curDataBase) {},
 
-    CommitDatabase: function (curDataBase) { },
+    CommitDatabase: function (curDataBase) {},
 
-    RollBackDatabase: function (curDataBase) { },
+    RollBackDatabase: function (curDataBase) {},
 
-    TarnRunDatabase: function (type, databasePath, callback) { },
+    TarnRunDatabase: function (type, databasePath, callback) {},
 
     BackTask: function (id, element) {
         Window.getOperationInfo(element, function (info) {
@@ -607,11 +663,11 @@ export let Common = {
         });
     },
 
-    GetRecipeGroupNum: function (options, callback) { },
+    GetRecipeGroupNum: function (options, callback) {},
 
-    AddRecipeGroup: function (options, callback) { },
+    AddRecipeGroup: function (options, callback) {},
 
-    DeleteRecipeGroup: function (options, callback) { },
+    DeleteRecipeGroup: function (options, callback) {},
 
     RecipeToPlcByGroupNo: function (options, callback) {
         var params = {
@@ -657,18 +713,21 @@ export let Common = {
                 position: query.position,
                 path: query.path,
             },
-
         };
         socket.emit("super.task-run", params);
     },
 
     recipeRecordCsv: function (query, callback) {
-        var _device = navigator.platform.indexOf("Win") > -1 ? "pc" : query.position;
+        var _device =
+            navigator.platform.indexOf("Win") > -1 ? "pc" : query.position;
         hailib.define(["pn"], function (pn) {
             if (pn.series === "IPC") _device = "pc";
         });
         var curUserAgent = navigator.userAgent;
-        if (curUserAgent.indexOf("rk322x-box") > -1 || curUserAgent.indexOf("TVBox") > -1) {
+        if (
+            curUserAgent.indexOf("rk322x-box") > -1 ||
+            curUserAgent.indexOf("TVBox") > -1
+        ) {
             _device = "pc";
         } else {
             _device = "pc";
@@ -683,19 +742,22 @@ export let Common = {
                 selectBomID: query.recipeId,
                 selectBomTable: query.recipeTableId,
             },
-
         };
         socket.emit("super.task-run", params);
     },
 
     alarmRecordCsv: function (query, callback) {
-        var _device = navigator.platform.indexOf("Win") > -1 ? "pc" : query.position;
+        var _device =
+            navigator.platform.indexOf("Win") > -1 ? "pc" : query.position;
         hailib.define(["pn"], function (pn) {
             if (pn.series === "IPC") _device = "pc";
         });
 
         var curUserAgent = navigator.userAgent;
-        if (curUserAgent.indexOf("rk322x-box") > -1 || curUserAgent.indexOf("TVBox") > -1) {
+        if (
+            curUserAgent.indexOf("rk322x-box") > -1 ||
+            curUserAgent.indexOf("TVBox") > -1
+        ) {
             _device = "pc";
         } else {
             _device = "pc";
@@ -707,22 +769,1830 @@ export let Common = {
                 group: query.id,
                 path: query.path,
             },
-
         };
         socket.emit("super.task-run", params);
     },
 
-    PrintText: function (name, text) { },
+    PrintText: function (name, text) {},
 
-    PrintLine: function (name, arr) { },
+    PrintLine: function (name, arr) {},
 
-    getConnected: function () { },
+    getConnected: function () {},
 
-    publish: function (topic, message, opts, callback) { },
+    publish: function (topic, message, opts, callback) {},
 
     graphicAudioPlay: function (element, stage) {
         hailib.define(["audio"], function (audioModule) {
             audioModule.playAudio(element, stage);
         });
-    }
-}
+    },
+};
+
+export const Window = {
+    AppScanCode: function () {
+        hailib.define(["appscancode"], function (appscancode) {
+            appscancode.scanStart();
+        });
+    },
+    WebIframe: function (root, option) {
+        hai.use("webIframe", function () {
+            hai.webIframe(root, option);
+        });
+    },
+    UpdateFile: function (options) {
+        hai.use("UpdateFile", function () {
+            hai.UpdateFile(options);
+        });
+    },
+    TimeInputSet: function (options, callback) {
+        hai.use("timeInputSet", function () {
+            hai.timeInputSet(options, callback);
+        });
+    },
+    logOperationInfo: function (info) {
+        return hai.use("ophis", function () {
+            return hai.ophis.log(info);
+        });
+    },
+    getOperationInfo: function (element, callback) {
+        if (typeof callback !== "function") return;
+        if (!(element instanceof Element)) {
+            return callback(null);
+        }
+        return hai.use("ophis", function () {
+            return callback(hai.ophis.getInfo(element));
+        });
+    },
+    operationLog: function (container) {
+        hai.use("ophis", function () {
+            hai.ophis.render(container);
+        });
+    },
+    FileList: function (root, option) {
+        hai.use("FileList", function () {
+            hai.FileList(root, option);
+        });
+    },
+    BarChart: function (type, root, option) {
+        hai.use("Chart", function () {
+            hai.use("BarChart", function () {
+                var BarCharts = new BarChart(type, root, option);
+                BarCharts.init();
+            });
+        });
+    },
+    XyCurve: function (root, option) {
+        hai.use("Chart", function () {
+            hai.use("XyCurve", function () {
+                var xyCurve = new XyCurve(root, option);
+                xyCurve.init();
+            });
+        });
+    },
+    PrintPic: function (option) {
+        // HMIS-9616, 在线模拟没有打印功能
+        var isWindowRuntime = hai.isWindowRuntime();
+        if (isWindowRuntime) {
+            Window.Toast(sysLang["feature.deficiency"]);
+            return;
+        }
+        hai.use("PrintPic", function () {
+            hai.PrintPic(option);
+        });
+    },
+    PDFPel: function (options) {
+        hai.use("PDF", function () {
+            hai.use("PDFPel", function () {
+                hai.PDFPel(options);
+            });
+        });
+    },
+    RealTimeCurve: function (root, option, curve) {
+        hai.use("Chart", function () {
+            hai.use("RealTimeCurve", function () {
+                curve[root.id] = new Curve(root, option);
+                curve[root.id].init();
+            });
+        });
+    },
+    HistoryCurve: function (res, option) {
+        hai.use("Chart", function () {
+            hai.use("HistoryCurve", function () {
+                var id = res.symId;
+                var roots = document.getElementById(id);
+                HistoryCurveArray[id] = hai.HistoryCurve(
+                    roots,
+                    res.data,
+                    option
+                );
+                HistoryCurveArray[id].init();
+            });
+        });
+    },
+    getLang: function (value) {
+        if (CurrentActivityFrameList) {
+            for (
+                var index = 0;
+                index < CurrentActivityFrameList.length;
+                index++
+            ) {
+                socket.emit(
+                    "getProjectLang",
+                    CurrentActivityFrameList[index],
+                    langID[value],
+                    langID[value]
+                );
+            }
+            Window.getSysLang();
+            hai.emitMessage("sysLangChange");
+        }
+    },
+    userGroupEdit: function (element) {
+        Window.getOperationInfo(element, function (info) {
+            socket.emit("getUser", false, info);
+        });
+    },
+    DataList: function (options) {
+        hai.use("DataList", function () {
+            hai.DataList(options);
+        });
+    },
+    GetCurrentFrameId: function () {
+        return hai.ActivityManage.getCurrentFrameId();
+    },
+    ExportData: function (type, position, filePath, fileFormat, element) {
+        var data = {
+            type: type,
+            position: position,
+            filePath: filePath,
+            fileFormat: fileFormat,
+        };
+        Window.getOperationInfo(element, function (info) {
+            data.opinfo = info;
+            socket.emit("getHisGroupInfo", data);
+        });
+    },
+    sendActivityFrame: function () {
+        socket.emit("activeFrame", CurrentActivityFrameList);
+    },
+    Weather: function (options) {
+        hai.use("Weather", function () {
+            hai.Weather(options);
+        });
+    },
+    getSysLang: function () {
+        var langNo = variables[sysLangId].Value;
+        hai.get(
+            "/getSysLang",
+            {
+                langNo: langNo,
+                langName: langID[langNo],
+            },
+            function (res) {
+                if (res) {
+                    var resJson = JSON.parse(res);
+                    if (resJson.code == 200) {
+                        var langJson = resJson.data.langJson;
+                        sysLang = langJson;
+                        // hai.ActivityManage.refresh(Window.GetCurrentFrameId())
+                        hai.emitMessage("sysLangChange");
+                        hailib.define(
+                            ["libs/env.js"],
+                            function (
+                                /** @type {mer.rc.Library["env"]} */ env
+                            ) {
+                                env.events.emit("syslang.update", langJson);
+                            }
+                        );
+                    } else {
+                    }
+                }
+            }
+        );
+    },
+    QRCode: function (callback) {
+        hai.use("QRCode", function () {
+            if (!window.QRCode) {
+                hai.QRCode();
+            }
+            callback();
+        });
+    },
+    GetSysTime: function () {
+        var date = variables[14].Value;
+        var time = variables[15].Value;
+        // return date + " " + time
+        // shawvyu
+        // 兼容旧版本hmi不支持-的时间格式
+        return (date + " " + time).replace(/-/g, "/");
+    },
+    GetSysTimeDate: function () {
+        var year = variables[7].Value;
+        var month = variables[8].Value;
+        var day = variables[9].Value;
+        var hour = variables[10].Value;
+        var minute = variables[11].Value;
+        var second = variables[12].Value;
+        return new Date(year, month, day, hour, minute, second);
+    },
+    TimeSelect: function (options, callback) {
+        hai.use("timeSelect", function () {
+            var timeSelect = hai.timeSelect;
+            timeSelect(options, callback);
+        });
+    },
+    TimeSet: function (options, callback) {
+        hai.use("TimeSet", function () {
+            // callback(hai.TimeSet(options));
+            hai.TimeSet(options);
+        });
+    },
+    Select: function (options, callback, element) {
+        hai.use("Select", function () {
+            callback(hai.Select(options));
+        });
+    },
+    Table: function (options) {
+        hai.use("Table", function () {
+            hai.Table(options);
+        });
+    },
+    RecipeGroup: function (options) {
+        hai.use("RecipeGroup", function () {
+            hai.RecipeGroup(options);
+        });
+    },
+    RecipeEditTableBox: function (options) {
+        hai.use("RecipeEditBox", function () {
+            hai.RecipeEditBox(options);
+        });
+    },
+    RecipeEditRowClass: function (options) {
+        hai.use("RecipeEditClass", function () {
+            hai.RecipeEditClass(options);
+        });
+    },
+    Search: function (options) {
+        hai.use("Search", function () {
+            hai.Search(options);
+        });
+    },
+    Loading: function (options) {
+        hai.use("Loading", function () {
+            hai.Loading(options);
+        });
+    },
+    Notification: function (options) {
+        hai.use("Notification", function () {
+            hai.Notification(options);
+        });
+    },
+    GoToUrl: function (url) {
+        window.location.href = url;
+    },
+    CameraFrame: function (options, element) {
+        Window.getOperationInfo(element, function (info) {
+            !!info && Window.logOperationInfo(info);
+        });
+        if (hai.getParam("platform") == "ls") {
+            try {
+                window.cameraControl.openAppCameraPage(options);
+            } catch (error) {
+                hai.use("CameraFrame", function () {
+                    hai.CameraFrame(options);
+                });
+            }
+        } else {
+            hai.use("CameraFrame", function () {
+                hai.CameraFrame(options);
+            });
+        }
+    },
+    CameraWebRTC: function (options, currentElement) {
+        // 缺陷没有考虑多个共用的情况
+        const { uuid, channel, symId: id } = options;
+        const host = hai.getRtspHost().replace(":8000", "");
+        const symId = id || currentElement.GetAttr("id"); // 兼容一下，有些返回 currentElement == null
+        const myplayID = symId + "myPlayer";
+
+        // 直接获取 symbol 图元 DOM; 把 player 挂载 symbol 图元上这样就不会重复生成
+        const symbolEl = document.getElementById(symId);
+
+        // 判断一下是否重复生成
+        let videoElem = symbolEl.querySelector(`#${myplayID}`);
+        if (videoElem) {
+            // 自动播放 symbolEl?.player?.play()
+            if (symbolEl.player) {
+                // symbolEl.player.play && symbolEl.player.play();
+                return symbolEl.player;
+            }
+            // 重新创建 video
+            videoElem.srcObject = null;
+            videoElem.remove();
+        }
+
+        // 由于浏览器设置只能添加 muted 静音，否则会白屏
+        const html = /* html */ `<video id="${myplayID}" data-uuid="${uuid}" data-symId="${symId}" style="background-color:#FFF;width:100%;height:100%;" muted controls playsInline webkit-playsinline autoplay></video>`;
+        symbolEl.firstChild.innerHTML = html;
+        // 重新获取一下，以获取最新
+        videoElem = symbolEl.querySelector(`#${myplayID}`);
+
+        const url = `${host}/stream/${uuid}/channel/${channel}/webrtc?uuid=${uuid}&channel=${channel}`;
+        const headers = {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        };
+        const config = {
+            iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }],
+            sdpSemantics: "unified-plan",
+        };
+        const maxRetries = 5; // 允许的最大重试次数
+        let retryCount = 0; // 用于重试逻辑
+        let atobData = null; // 开启或关闭 spd
+        let timeId = null;
+
+        // 构建媒体流
+        let rtc = null;
+        let stream = null;
+        createPeerConnection();
+
+        async function createPeerConnection() {
+            stream = new MediaStream();
+            videoElem.srcObject = stream;
+
+            rtc = new RTCPeerConnection(config);
+            rtc.addEventListener(
+                "connectionstatechange",
+                connectionstatechange
+            );
+            rtc.onnegotiationneeded = onnegotiationneeded;
+            rtc.onsignalingstatechange = onsignalingstatechange;
+            rtc.ontrack = ontrack;
+            const offer = await rtc.createOffer({
+                offerToReceiveAudio: true,
+                offerToReceiveVideo: true,
+            });
+            rtc.setLocalDescription(offer);
+        }
+
+        function retryConnection() {
+            if (retryCount < maxRetries) {
+                destroy(false);
+                timeId = setTimeout(() => {
+                    retryCount++;
+                    createPeerConnection();
+                }, Math.pow(2, retryCount) * 1000);
+            } else {
+                console.error(
+                    "Max retries exceeded, giving up on reconnecting."
+                );
+            }
+        }
+
+        /** 监听状态变化 */
+        function connectionstatechange() {
+            if (!rtc) return;
+            switch (rtc.connectionState) {
+                case "disconnected": // 连接已经断开，但是可以尝试重新连接
+                case "failed": // 连接尝试失败
+                    retryConnection();
+                    console.log(
+                        "Connection state changed to:",
+                        rtc.connectionState
+                    );
+                    break;
+                case "connected": // 已经成功建立连接
+                    console.log(
+                        "Connection state changed to:",
+                        rtc.connectionState
+                    );
+                    retryCount = 0;
+                    break;
+                case "new": // 新创建的连接，还没有做任何动作
+                case "connecting": // 正在尝试建立连接
+                case "checking": // 检查是否可以建立连接
+                case "completed": // 连接已经完成，所有数据传输都已完成
+                case "closed": // 连接已经关闭，不能再尝试重新连接
+                default:
+                    console.log(
+                        "Connection state changed to:",
+                        rtc.connectionState
+                    );
+                    break;
+            }
+        }
+
+        /** 获取流的 sdp,用于开启或关闭 */
+        async function fetchAtob() {
+            if (atobData) return atobData; // rtc.currentLocalDescription.sdp
+            try {
+                const res = await fetch(url, {
+                    headers,
+                    method: "POST",
+                    body: `data=${window.btoa(rtc.localDescription.sdp)}`,
+                });
+                if (res.status == 200) {
+                    const data = await res.text();
+                    atobData = atob(data);
+                    return atobData;
+                }
+                console.error("fetchAtob: ", res);
+            } catch (err) {
+                console.error("fetchAtob: ", err);
+            }
+        }
+
+        /** rtc 回调方法 */
+        function ontrack(event) {
+            stream.addTrack(event.track);
+        }
+
+        async function onnegotiationneeded() {
+            if (!rtc) return;
+            const offer = await rtc.createOffer();
+            await rtc.setLocalDescription(offer);
+            const sdp = await fetchAtob();
+            sdp &&
+                rtc &&
+                rtc.setRemoteDescription(
+                    new RTCSessionDescription({ type: "offer", sdp })
+                ); // rtc 可能已经被滞空
+        }
+
+        async function onsignalingstatechange() {
+            if (!rtc) return;
+            switch (rtc.signalingState) {
+                case "have-local-offer": // 连接的本地端机器已经本地应用了一个 SDP offer
+                    const sdp = await fetchAtob();
+                    sdp &&
+                        rtc &&
+                        rtc.setRemoteDescription(
+                            new RTCSessionDescription({ type: "answer", sdp })
+                        ); // rtc 可能已经被滞空
+                    break;
+                case "have-remote-pranswe": // 一个本地的SDP offer被应用，同时一个SDP pranswer在远端被应用
+                case "have-local-pranswer": // 一个来自远端的SDP offer已经被应用，同时一个SDP pranswer在本地被应用
+                case "have-remote-offer": // 这条连接的远端机器已经本地应用了一个SDP offer
+                case "stable": // offer/answer正在被交换
+                case "closed": // 连接被关闭
+                    console.info("signalingState:", rtc.signalingState);
+                    break;
+            }
+        }
+
+        /** 视频轨道启停 */
+        function videoTracksEnabled(enabled) {
+            stream.getVideoTracks().forEach((track) => {
+                track.enabled = enabled;
+            });
+        }
+
+        /** 暂停流 */
+        function streamTrackStop() {
+            stream.getTracks().forEach((track) => {
+                track.stop();
+            });
+        }
+
+        /** 销毁rtc连接 */
+        function destroy(needRemove = true) {
+            timeId && clearTimeout(timeId);
+            // 关闭流
+            rtc && rtc.close();
+            streamTrackStop();
+            // 直接销毁 video 标签以节约内存
+            if (videoElem) {
+                videoElem.srcObject = null;
+                needRemove && videoElem.remove();
+            }
+            // 清除闭包元素
+            atobData = null;
+            rtc = null;
+            stream = null;
+            // 手动清除内存泄漏点 -> <Symbol>CurrentElement.player = null、<cameraFrame>player = null;
+            // 防止没有删除或遗漏删除而内存泄漏
+            if (needRemove) symbolEl.player = null;
+        }
+
+        /** 暂停播放 */
+        function pause() {
+            videoElem && videoElem.pause();
+            videoTracksEnabled(false);
+        }
+
+        /** 开始播放 */
+        function play() {
+            videoTracksEnabled(true);
+            videoElem && videoElem.play();
+        }
+
+        return {
+            rtc: rtc,
+            stream: stream,
+            stop: pause,
+            play: play,
+            pause: pause,
+            destroy: destroy,
+        };
+    },
+    getStorageCamera: function (symId) {
+        for (var i = 0; i < Window.CamerafetchInfo.length; i++) {
+            if (Window.CamerafetchInfo[i].symId == symId) {
+                return Window.CamerafetchInfo[i];
+            }
+        }
+        return null;
+    },
+    setStorageCamera: function (DeviceSerial, info) {
+        var isExist = false;
+        for (var i = 0; i < Window.CamerafetchInfo.length; i++) {
+            if (Window.CamerafetchInfo[i].DeviceSerial == DeviceSerial) {
+                isExist = true;
+                Window.CamerafetchInfo[i] = info;
+                break;
+            }
+        }
+        if (!isExist) {
+            Window.CamerafetchInfo.push(info);
+        }
+    },
+    ShowById: function (id, subLocation, isSystemWinNoChanged, isLocalOnload) {
+        if (isOnload == false && !isLocalOnload && indexlocal == true)
+            return console.log("showbyid return " + id);
+        /**
+         * @type {IActivityShowOptions}
+         */
+        var options = {
+            winType: subLocation ? "InsetSub" : "Frame",
+            isSystemWinNoChanged: isSystemWinNoChanged,
+            subLocation: subLocation,
+        };
+        if (options.winType == "InsetSub") {
+            hai.use("ActivityManage", function () {
+                var ActivityManage = hai.ActivityManage;
+                ActivityManage.showSub(String(id), options);
+            });
+        } else {
+            hai.use("ActivityManage", function () {
+                var ActivityManage = hai.ActivityManage;
+                ActivityManage.show(String(id), options);
+            });
+        }
+    },
+    ShowScreenSaverById: function (id) {
+        var options = {
+            winType: "Frame",
+            isSystemWinNoChanged: undefined,
+            subLocation: undefined,
+            isScreenSaver: true,
+            zIndex: 10000,
+        };
+        hai.use("ActivityManage", function () {
+            var ActivityManage = hai.ActivityManage;
+            ActivityManage.show(String(id), options);
+        });
+    },
+    HideById: function (id) {
+        if (hai.ActivityManage) {
+            hai.ActivityManage.hide(String(id)); // 隐藏画面
+        } else {
+            console.error("画面管理模块加载失败");
+        }
+    },
+    Show: function (name, element) {
+        // 判断画面id，name，no互转表是否存在
+        if (!FrameIdToNameToNoDB) {
+            throw new Error("FrameIdToNameToNoDB is error");
+        }
+        // 取出对应位置
+        var index = hai.inArray(name, FrameIdToNameToNoDB.NAME);
+        if (index != -1) {
+            Window.getOperationInfo(element, function (info) {
+                if (info === null) {
+                    return;
+                }
+                info.Origin = hai.ActivityManage.getCurrentFrameId();
+                info.Result = FrameIdToNameToNoDB.NO[index];
+                Window.logOperationInfo(info);
+            });
+            // 利用id创建画面
+            this.ShowById(FrameIdToNameToNoDB.ID[index]);
+        }
+    },
+    ShowByNo: function (number, subLocation, isSystemWinNoChanged) {
+        // 判断画面id，name，no互转表是否存在
+        if (!FrameIdToNameToNoDB) {
+            throw new Error("FrameIdToNameToNoDB is error");
+        }
+        // 取出对应位置
+        var index = hai.inArray(number, FrameIdToNameToNoDB.NO);
+        if (index != -1) {
+            // 利用id创建画面
+            this.ShowById(
+                FrameIdToNameToNoDB.ID[index],
+                subLocation,
+                isSystemWinNoChanged
+            );
+        }
+    },
+    HideByNo: function (number) {
+        // 判断画面id，name，no互转表是否存在
+        if (!FrameIdToNameToNoDB) {
+            throw new Error("FrameIdToNameToNoDB is error");
+        }
+        // 取出对应位置
+        var index = hai.inArray(number, FrameIdToNameToNoDB.NO);
+        if (index != -1) {
+            // 利用id创建画面
+            this.HideById(FrameIdToNameToNoDB.ID[index]);
+        }
+    },
+    ClearData: function (type, element) {
+        Window.getOperationInfo(element, function (info) {
+            info && (DataType = "fn-clear");
+            Window.logOperationInfo(info);
+            if (element && element.hwkey) {
+                var isClearHistoryRecord =
+                    element.getAttribute("ishistoryrecord");
+                var isClearAlarm = element.getAttribute("isalarmhistoryrecord");
+                var alarmType = element.getAttribute("alarmcleartype");
+                var isClear = element.getAttribute("isalerthistory");
+                if (isClearHistoryRecord || isClearAlarm || alarmType) {
+                    // 存在新的属性 但可能有些新的属性没有那就取旧的总开关的属性值
+                    var isClearRealtime =
+                        element.getAttribute("alarmcleartype") ===
+                        "keepRealTime"
+                            ? false
+                            : true;
+                    if (
+                        (isClearHistoryRecord === "true" ||
+                            (isClearHistoryRecord === null &&
+                                isClear === "true")) &&
+                        (isClearAlarm === "true" ||
+                            (isClearAlarm === null && isClear === "true"))
+                    ) {
+                        // 清除全部 0x20
+                        socket.emit("ClearDataDB", "allFile", isClearRealtime);
+                    } else if (
+                        isClearHistoryRecord === "true" ||
+                        (isClearHistoryRecord === null && isClear === "true")
+                    ) {
+                        // 清除历史数据 0x20
+                        socket.emit("ClearDataDB", "history");
+                    } else if (
+                        isClearAlarm === "true" ||
+                        (isClearAlarm === null && isClear === "true")
+                    ) {
+                        // 清除报警 0x20
+                        socket.emit("ClearDataDB", "alarm", isClearRealtime);
+                    } else {
+                    }
+                } else {
+                    // 都不存在新属性 直接用旧属性
+                    var isClear = element.getAttribute("isalerthistory");
+                    if (isClear === "true")
+                        socket.emit("ClearDataDB", "allFile", true);
+                }
+            } else {
+                if (type == 1) {
+                    // 清除报警换成走0x20
+                    var isClearRealtime = true;
+                    if (element && element.isClearRealtime !== undefined) {
+                        isClearRealtime = !!element.isClearRealtime;
+                    }
+                    socket.emit("ClearDataDB", "alarm", isClearRealtime);
+                } else {
+                    socket.emit("ClearDataToDB", type, info);
+                }
+            }
+        });
+        Window.Toast("Clear...", 10000, {
+            height: "100%",
+        });
+    },
+    PopClose: function (element) {
+        if (!hai.ActivityManage) return console.log("画面管理出错");
+        if (hai.ActivityManage.isEmptyPopFrameIdOrderList()) return; // 没有弹出画面
+        var closeId = hai.ActivityManage.dequeuePopFrameId();
+        hai.ActivityManage.hide(closeId);
+        modalHideToQt();
+        Window.getOperationInfo(element, function (info) {
+            if (info === null) return;
+            info.DataType = "pic-closeSub";
+            info.Result = closeId;
+            Window.logOperationInfo(info);
+        });
+        hailib.define(["hrc.js"], function (hrc) {
+            hrc.hideSubWinByWinId(closeId);
+        });
+    },
+    ShowSymbol: function (winName, symbolName) {
+        //lihao 修改 2018/7/3
+        // var element = document.getElementById(symbolName);
+        // if (element)
+        //     element.style.display = "block";
+        //lihao modify 2019.9.10
+        //将对应画面id加上这样可以正常被执行
+        var tempWinId = getWinIDByName(winName);
+        if (tempWinId != -1) {
+            this.ShowElement(tempWinId, symbolName);
+        }
+    },
+    HideSymbol: function (winName, symbolName) {
+        //lihao 修改 2018/7/3
+        // var element = document.getElementById(symbolName);
+        // if (element)
+        //     element.style.display = "none";
+        //lihao modify 2019.9.10
+        //将对应画面id加上这样可以正常被执行
+        // shawvyu modify 2023.3.6 组态修改过symbolName，所以现在symbolName=symId
+        var tempWinId = getWinIDByName(winName);
+        if (tempWinId != -1) {
+            this.HideElement(tempWinId, symbolName);
+        }
+    },
+    ShowElement: function (winId, symId) {
+        //lihao 添加  2018/3/21
+        var index = hai.inArray(winId, CurrentActivityFrameList);
+        if (index == -1) return;
+
+        var state = "block";
+
+        // 画面操作按钮、文本
+        if (symId.length > 8 && symId.substr(0, 8) == "WinOpBtn") {
+            state = "flex";
+        } else if (symId.length > 8 && symId.substr(0, 8) == "TxtBlock") {
+            state = "flex";
+        }
+        // 数字输入、文本输入、实时数据显示输入
+        else if (
+            symId.length > 11 &&
+            (symId.substr(0, 11) == "NumShowIput" ||
+                symId.substr(0, 11) == "TxtShowIput" ||
+                symId.substr(0, 12) == "DataShowIput")
+        ) {
+            state = "flex";
+        }
+        // 位设定、功能按钮、字设定
+        else if (
+            symId.length > 5 &&
+            (symId.substr(0, 5) == "BitSw" ||
+                symId.substr(0, 6) == "FunBtn" ||
+                symId.substr(0, 6) == "WordSw")
+        ) {
+            state = "flex";
+        }
+
+        var element = document.getElementById(symId);
+        if (element) {
+            ElementVisiable(element, state);
+            subSymShow(element);
+            return;
+        }
+        element = document.getElementById(symId + "-si");
+        if (element) {
+            //add by lh 2020.4.7
+            //为闪烁图元添加属性，目前支持闪烁的图元有字显示，位显示，文本都有si结点
+            element.setAttribute("unvis", "false");
+            ElementVisiable(element, state);
+            subSymShow(element);
+            return;
+        }
+        element = document.getElementById(symId + "-sv");
+        if (element) {
+            ElementVisiable(element, state);
+            subSymShow(element);
+            return;
+        }
+        element = document.getElementById(symId + "-st");
+        if (element) {
+            ElementVisiable(element, state);
+            subSymShow(element);
+            return;
+        }
+        element = document.getElementById(symId + "-sh");
+        if (element) {
+            if (symId.length > 15 && symId.substr(0, 15) == "HWReportBrowser") {
+                element.style.visibility = "visible";
+            } else {
+                ElementVisiable(element, state);
+            }
+            subSymShow(element);
+            return;
+        }
+    },
+    HideElement: function (winId, symId) {
+        //lihao 添加 2018/3/21
+        var index = hai.inArray(winId, CurrentActivityFrameList);
+        if (index == -1) return;
+
+        var element = document.getElementById(symId);
+        if (element) {
+            ElementVisiable(element, "none");
+            subSymHide(element);
+            return;
+        }
+        element = document.getElementById(symId + "-si");
+        if (element) {
+            element.setAttribute("unvis", "true");
+            ElementVisiable(element, "none");
+            subSymHide(element);
+            return;
+        }
+        element = document.getElementById(symId + "-sv");
+        if (element) {
+            ElementVisiable(element, "none");
+            subSymHide(element);
+            return;
+        }
+        element = document.getElementById(symId + "-st");
+        if (element) {
+            ElementVisiable(element, "none");
+            subSymHide(element);
+            return;
+        }
+        element = document.getElementById(symId + "-sh");
+        if (element) {
+            if (symId.length > 15 && symId.substr(0, 15) == "HWReportBrowser") {
+                element.style.visibility = "hidden";
+            } else {
+                ElementVisiable(element, "none");
+            }
+            subSymHide(element);
+            return;
+        }
+        element = document.getElementById(symId + "-at");
+        if (element) {
+            ElementVisiable(element, "none");
+            subSymHide(element);
+            return;
+        }
+        element = document.getElementById(symId + "-sti");
+        if (element) {
+            ElementVisiable(element, "none");
+            subSymHide(element);
+            return;
+        }
+        element = document.getElementById(symId + "-ati");
+        if (element) {
+            ElementVisiable(element, "none");
+            subSymHide(element);
+            return;
+        }
+        return;
+    },
+    ShowPaymentInfo: function (element) {
+        payCheckHandle = true;
+        // 请求分期付款到期时间
+        socket.emit("payPW to back", "0|0", element.id);
+    },
+    Login: function (element) {
+        var userNames = [];
+        var userKeyboardTypes = [];
+        var filterUserGroups = [];
+        //过滤出被停用的组和用户
+        // 新增 过滤禁止本地或禁止远程登录
+        for (var i = 0; i < window._tempUserGroup.length; i++) {
+            if (
+                !(window._tempUserGroup[i].Disable == "1") &&
+                window._tempUserGroup[i].users.length &&
+                groupIsDisableLogin(window._tempUserGroup[i])
+            ) {
+                filterUserGroups.push(window._tempUserGroup[i].users);
+            }
+        }
+        for (var i = 0; i < filterUserGroups.length; i++) {
+            for (var j = 0; j < filterUserGroups[i].length; j++) {
+                if (
+                    !(filterUserGroups[i][j].Disable == "1") &&
+                    userIsDisableLogin(filterUserGroups[i][j])
+                ) {
+                    userNames.push(filterUserGroups[i][j].Name);
+                }
+            }
+        }
+        hai.each(userNames, function (i1, userName) {
+            hai.each(window._tempUser, function (i2, userInfo) {
+                if (userInfo.Name == userName) {
+                    userKeyboardTypes.push(
+                        hai.isPureNumber(
+                            window.atob(
+                                userInfo.SPassword ? userInfo.SPassword : ""
+                            )
+                        )
+                    );
+                }
+            });
+        });
+        Window.loginSym = element ? element.getAttribute("name") : "";
+        Window.LoginModal(userNames, {
+            title: sysLang.userLoginTitle,
+            username: sysLang.userName,
+            password: sysLang.password,
+            keyboardTypes: userKeyboardTypes,
+            loginType: "USER_LOGIN",
+            callback: function (isOk, data) {
+                if (isOk) {
+                    var param = {
+                        authType: "USER_LOGIN",
+                        username: data.username,
+                        password: data.password,
+                    };
+                    Window.getOperationInfo(element, function (info) {
+                        param.opinfo = info;
+                        hai.emitMessage("userAuth", param);
+                    });
+                }
+            },
+        });
+        GlobalVar.SaveSymGmElement = "";
+        // this.PopModalById(6);
+    },
+    LoginModal: function (usernames, options) {
+        // 画面集成只读 不给登录
+        if (getQueryString("or") === "1" && location.href.indexOf("passid"))
+            return Window.Toast(sysLang.readonly);
+        modalShowToQt();
+        hai.use("loginModal", function () {
+            hai.loginModal(usernames, options);
+        });
+    },
+    DialogBox: function (usernames, options) {
+        hai.use("dialogBox", function () {
+            hai.dialogBox(usernames, options);
+        });
+    },
+    Logout: function (element) {
+        // if (userLevel == 0) {
+        if (window.user.getLevel() == 0) {
+            if (
+                !user ||
+                typeof user.isEnableLogout !== "function" ||
+                !user.isEnableLogout()
+            ) {
+                this.Toast(sysLang.userLoginPlz, 1000);
+                return;
+            }
+        }
+
+        var _this = this;
+        return Window.getOperationInfo(element, function (info) {
+            _this.PopModalById(8, { opinfo: info });
+            // 修改前端弹框模板多语言
+            var paymentCheckModalEl =
+                document.getElementById("paymentCheckModal");
+            if (paymentCheckModalEl) {
+                paymentCheckModalEl.querySelector("h3").innerHTML =
+                    sysLang.logoutTip;
+                paymentCheckModalEl.querySelectorAll("input")[0].value =
+                    sysLang.close;
+                paymentCheckModalEl.querySelectorAll("input")[1].value =
+                    sysLang.confirm;
+            }
+        });
+    },
+    ImportRecipeToFlash: function (
+        importRecipeFilePosition,
+        importRecipeFilePath
+    ) {
+        console.log("send ImportRecipeToFlash");
+        //document.getElementById("fileInfo").innerHTML = "正在导入...";
+
+        //$("#fileInfo").html("正在导入...");
+        setHtml("fileInfo", "正在导入...");
+        $("#fileInfo").show();
+        socket.emit(
+            "copyBomFile",
+            importRecipeFilePosition,
+            importRecipeFilePath,
+            ""
+        );
+    },
+    ShowSubByNo: function (currentElement, No) {
+        //取出对应位置
+        var index = hai.inArray(No, FrameIdToNameToNoDB["NO"]);
+        //传入的画面号为空
+        if (index == -1) return;
+        this.ShowSubById(currentElement, FrameIdToNameToNoDB["ID"][index]);
+    },
+    ShowSubById: function (currentElement, Id) {
+        var indexId = hai.inArray(Id, FrameIdToNameToNoDB["ID"]);
+        var frameNo;
+        if (indexId != -1) frameNo = FrameIdToNameToNoDB["NO"][indexId];
+        if (Id && !subPages[frameNo]) return;
+        var that = this;
+        var currentPageId = currentElement.GetAttr("pageid");
+        var currentPageShow = currentElement.GetAttr("pageshow");
+        var currentSubShow = currentElement.GetAttr("subshow");
+        var activityIndex = hai.inArray(Id, CurrentActivityFrameList);
+        var subLocation = {};
+        subLocation.x = currentElement.GetAttr("positionleft");
+        subLocation.y = currentElement.GetAttr("positiontop");
+        subLocation.width = currentElement.GetAttr("positionwidth");
+        subLocation.height = currentElement.GetAttr("positionheight");
+        subLocation.parentid = currentElement.GetWinId();
+        subLocation.hideId = null;
+
+        if (currentSubShow === "hide") {
+            currentElement.SetAttr("pageid", Id);
+            currentElement.SetAttr("pageshow", 0);
+            return;
+        }
+        if (currentPageId) {
+            // 存在
+            // 判断是已经显示的子画面就不在显示
+            if (currentPageId == Id || activityIndex != -1) {
+                if (currentPageShow == 0) {
+                    currentElement.SetAttr("pageid", Id);
+                    currentElement.SetAttr("pageshow", 1);
+                    this.ShowById(Id, subLocation);
+                } else {
+                }
+            } else {
+                currentElement.SetAttr("pageid", Id);
+                currentElement.SetAttr("pageshow", 1);
+                subLocation.hideId = currentPageId;
+                this.ShowById(Id, subLocation);
+                // this.HideById(currentPageId);
+            }
+        } else {
+            // 不存在
+            currentElement.SetAttr("pageid", Id);
+            currentElement.SetAttr("pageshow", 1);
+            this.ShowById(Id, subLocation);
+        }
+    },
+    HideSub: function (currentElement) {
+        var pageid = currentElement.GetAttr("pageid"),
+            pageshow = currentElement.GetAttr("pageshow");
+        if (pageshow == 1) {
+            // currentElement.SetAttr("pageid", "");
+            currentElement.SetAttr("pageshow", 0);
+            this.HideById(pageid);
+        }
+    },
+    PopSubById: function (id, options, x, y, hashBoard) {
+        options = options || {};
+        options.winType = "PopSub";
+        options.subLocation = null;
+        options.isSystemWinNoChanged = false;
+        Window.getOperationInfo(x, function (info) {
+            if (info === null) return;
+            info.DataType = "pic-popSub";
+            info.Result = id;
+            Window.logOperationInfo(info);
+        });
+        hai.use("ActivityManage", function () {
+            var ActivityManage = hai.ActivityManage;
+            if (ActivityManage.getCurrentFrameId()) {
+                ActivityManage.showSub(String(id), options);
+            } else {
+                // 这里避免开机启动首画面还没加载完成就执行弹出子画面 导致空id获取不到多语言文本。
+                setTimeout(function () {
+                    ActivityManage.showSub(String(id), options);
+                }, 500);
+            }
+        });
+    },
+    PopSubByNo: function (No, options, x, y) {
+        // 判断画面id，name，no互转表是否存在
+        if (!FrameIdToNameToNoDB) {
+            return console.error("FrameIdToNameToNoDB is error");
+        }
+        // 判断是否是子画面
+        if (!subPages.hasOwnProperty(No)) {
+            return console.log("子画面不存在");
+        }
+        // 取出对应位置
+        var index = hai.inArray(No, FrameIdToNameToNoDB["NO"]);
+        if (index == -1) {
+            return console.log("子画面画面号有误");
+        }
+        this.PopSubById(FrameIdToNameToNoDB["ID"][index], options, x, y);
+    },
+    Toast: function (context, mill, options) {
+        hai.use("toast", function () {
+            hai.toast(context, mill, options);
+        });
+    },
+    Popupbox: function (context, mill, options) {
+        hai.use("popupbox", function () {
+            hai.popupbox(context, mill, options);
+        });
+    },
+    PayModal: function (options) {
+        hai.use("PayModal", function () {
+            hai.PayModal(options);
+        });
+        if (indexlocal && window.MainPage) {
+            MainPage.setShowState("0");
+        }
+        modalShowToQt();
+    },
+    CloseModal: function (ID, symId) {
+        //关闭模态框
+        var modalId = ID ? ID : "HMI_MODAL"; //默认Modal ID 为HMI_MODAL
+        if (symId) {
+            var sym = document.getElementById(symId);
+            var modal = document.getElementById(modalId);
+            if (modalId == "RECIPE_MODAL") {
+                sym.SelectChild("Clickid", "bomGroupRoot").removeChild(modal);
+            } else {
+                sym.removeChild(modal);
+            }
+        } else {
+            document.body.removeChild(document.getElementById(modalId));
+        }
+    },
+    CloseModalByElement: function (classModal) {
+        //关闭模态框
+        try {
+            document.body.removeChild(classModal);
+        } catch (error) {}
+    },
+    CloseAlarmModalElement: function (el) {
+        // 关闭报警弹框
+        try {
+            var alertModaEl = document.querySelector(".alertTispModa-content");
+            alertModaEl.removeChild(el);
+            el.onclick = null;
+            el = null;
+            alertModaEl = null;
+        } catch (error) {}
+    },
+    updataAlertModeLang: function () {
+        if (!document.querySelector(".alertTispModa-head-title")) return;
+        try {
+            setTimeout(function () {
+                document.querySelector(".alertTispModa-head-title").innerHTML =
+                    sysLang["alert2.message"];
+                document.querySelector(".alertTispModa-head-clear").innerHTML =
+                    sysLang["clear"];
+                var expandTxt = curLang.indexOf("zh") > -1 ? "展开" : "expand";
+                var retractTxt =
+                    curLang.indexOf("zh") > -1 ? "收起" : "retract";
+                if (
+                    document.querySelector(".alertTispModa-content").style
+                        .display === "none"
+                ) {
+                    document.querySelector(
+                        ".alertTispModa-bottom-txt"
+                    ).innerHTML = sysLang["expand"] || expandTxt;
+                } else {
+                    document.querySelector(
+                        ".alertTispModa-bottom-txt"
+                    ).innerHTML = sysLang["retract"] || retractTxt;
+                }
+
+                // Item
+                var alarmList = document.querySelectorAll(".hw-notification");
+                alarmList.forEach(function (alert) {
+                    var Aid = alert.id;
+                    alert.querySelector(".hw-notification__title").innerHTML =
+                        sysLang.alarm;
+                    var langID =
+                        window.Variable.GetByFullName("$ProjectLanguageId");
+                    if (alarmLang && alarmLang[langID]) {
+                        alert.querySelector(
+                            ".hw-notification__content"
+                        ).innerHTML = alarmLang[langID][Aid]
+                            ? alarmLang[langID][Aid]["Alerttext"] || ""
+                            : "";
+                    }
+                });
+            }, 200);
+        } catch (error) {}
+    },
+    TestModal: function (context, mill, options) {
+        hai.use("testModal", function () {
+            hai.testModal(context, mill, options);
+        });
+    },
+    createStyleSheet: function () {
+        var head = document.head || document.getElementsByTagName("head")[0];
+        var style = document.createElement("style");
+        style.type = "text/css";
+        head.appendChild(style);
+        return style.sheet || style.styleSheet;
+    },
+    Ezuikit: function (callback) {
+        hai.use("Ezuikit", function () {
+            callback();
+        });
+    },
+    Highcharts: function (options, chartOpt) {
+        hai.use("Highcharts", function () {
+            console.log("options~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            console.log(options);
+            console.log("chartOpt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            console.log(chartOpt);
+            Highcharts.setOptions({
+                global: {
+                    useUTC: false,
+                },
+            });
+            var series = [];
+            var recordName = options.data.recordName;
+            var recordData = options.data.recordData;
+            var recordColor = options.data.color || [
+                "#000000",
+                "#1badae",
+                "#ecf1af",
+                "#a33f38",
+                "#7070dc",
+                "#1903ba",
+                "#2a436a",
+                "#45044f",
+                "#1c792d",
+                "#7612fd",
+                "#5c3e27",
+                "#319229",
+                "#8d45ba",
+                "#d55e58",
+                "#79529",
+                "#f910a3",
+                "#a45337",
+                "#f6358d",
+                "#e21a0b",
+                "#f504ed",
+                "#8dc092",
+                "#9ba045",
+                "#b31078",
+                "#a4f0c3",
+                "#42ba1e",
+                "#df41b1",
+                "#914395",
+                "#fad802",
+                "#b975fa",
+                "#ff1ee7",
+            ];
+            var lineWidth = [1, 1];
+            var dashStyle = ["ShortDash", "Solid"];
+
+            var startTime = options.data.startTime * 1000;
+            var endTime = recordData[recordData.length - 1]
+                ? recordData[recordData.length - 1].time * 1000
+                : options.data.endTime * 1000;
+
+            var time = [];
+            for (var i = 0; i < recordName.length; i++) {
+                var item = {};
+                item.name = recordName[i];
+                item.color = recordColor[i] || "#000000";
+                item.lineWidth = 1;
+                item.dashStyle = "Solid";
+                item.data = [];
+                for (var j = 0; j < recordData.length; j++) {
+                    if (i == 0) {
+                        var itemTime = new Date(
+                            recordData[j].time * 1000
+                        ).Format("yyyy-MM-dd hh:mm:ss");
+                        time.push(itemTime);
+                    }
+                    var itemData = parseFloat(recordData[j][recordName[i]]);
+                    item.data.push(itemData);
+                }
+                series.push(item);
+            }
+            console.log(series);
+            console.log(time);
+            var tickInterval = Math.ceil(recordData.length / 5);
+            console.log(tickInterval);
+            var chart = Highcharts.chart(options.symId, {
+                chart: {
+                    style: {
+                        borderColor: chartOpt.borderColor,
+                        backgroundColor: chartOpt.backgroundColor,
+                        color: chartOpt.color,
+                    },
+                    zoomType: "x",
+                },
+                title: {
+                    text: chartOpt.title,
+                    style: {
+                        color: chartOpt.color,
+                    },
+                },
+                legend: {
+                    //图例
+                    symbolWidth: 40,
+                },
+                credits: {
+                    enabled: false, // 禁用版权信息
+                },
+                // subtitle: {
+                //     text: '数据来源：thesolarfoundation.com',
+                //     style:{
+                //         color:"#ff0000"
+                //     }
+                // },
+                xAxis: {
+                    type: "datetime",
+                    dateTimeLabelFormats: {
+                        second: "%Y-%m-%d %H:%M:%S",
+                        minute: "%H:%M",
+                        hour: "%H:%M",
+                        day: "%e. %b",
+                        week: "%e. %b",
+                        month: "%b '%y",
+                        year: "%Y",
+                    },
+                    categories: time,
+                    tickInterval: tickInterval,
+                    // labels:{
+                    //     x:40,
+                    // },
+                    gridLineColor: chartOpt.color, //纵向网格线颜色
+                    gridLineWidth: 1, //纵向网格线宽度
+                    title: {
+                        text: chartOpt.xTitle,
+                    },
+                },
+                yAxis: {
+                    min: chartOpt.yMin,
+                    max: chartOpt.yMax,
+                    title: {
+                        text: chartOpt.yTitle,
+                    },
+                    gridLineColor: chartOpt.color, //纵向网格线颜色
+                    gridLineWidth: 1, //纵向网格线宽度
+                },
+                // plotOptions: {
+                //     series: {
+                //         // pointStart: new Date().getTime(),
+                //         pointStart: new Date("2016-07-26 09:36:20").getTime(),
+                //         pointInterval: 10000 // one day
+                //     }
+                // },
+                series: series,
+            });
+            var input = document.createElement("input");
+            input.type = "button";
+            input.value = "时间区间";
+            input.style.cssText = "position:absolute;top:0;left:0;";
+            input.setAttribute("clickid", "selectRegion");
+            document.getElementById(options.symId).appendChild(input);
+            var svg = chart.getSVG(); //获取svg然后转图片
+        });
+    },
+    FileModal: function (options) {
+        hai.use("FileModal", function () {
+            hai.FileModal(options);
+        });
+    },
+    DeviceModal: function (options) {
+        hai.use("DeviceModal", function () {
+            hai.DeviceModal(options);
+        });
+    },
+    Clipboard: function (type, options) {},
+    PopModalById: function (id, options) {
+        var packId = "modal" + id;
+        options = options || {};
+        options.winType = "PopModal";
+        options.subLocation = null;
+        options.isSystemWinNoChanged = false;
+
+        hai.use("ActivityManage", function () {
+            var ActivityManage = hai.ActivityManage;
+            ActivityManage.showSub(packId, options);
+        });
+    },
+    PopKeyboard: function (type, callback, options) {
+        modalShowToQt();
+        hai.use("keyboard", function () {
+            var keyboard = hai.keyboard;
+            keyboard(type, callback, options);
+        });
+    },
+    onloadWindow: function (winId, eleIds) {
+        var frameName = "frame_" + winId,
+            frameScript = ProjectScript.frame[frameName];
+        //字符串转数组
+        eleIds = eleIds.split(",");
+        eleIds.map(function (eleId) {
+            if (!eleId) return;
+            var element = document.getElementById(eleId);
+            if (!element) return;
+            // 属性改造
+            element["winId"] = winId;
+            element["hwkey"] = element.getAttribute("hwkey");
+            //变量名
+            var symNameVar = element.GetAttr("sym-type") + "_load";
+            //变量脚本
+            symScriptVar = frameScript[symNameVar];
+            if (symScriptVar != undefined) symScriptVar(element);
+        });
+    },
+    onShowWindow: function (winId, eleIds) {
+        hailib.define(["hrc.js"], function (hrc) {
+            hrc.updateWinId(winId);
+        });
+        var frameName = "frame_" + winId,
+            frameScript = ProjectScript.frame[frameName];
+        //字符串转数组
+        eleIds = eleIds.split(",");
+        eleIds.map(function (eleId) {
+            if (!eleId) return;
+            var element = document.getElementById(eleId);
+            if (!element) return;
+            //变量名
+            var symNameVar = element.GetAttr("sym-type") + "_show";
+            //变量脚本
+            symScriptVar = frameScript[symNameVar];
+            if (symScriptVar != undefined) symScriptVar(element);
+        });
+        //改变画面更改语言
+        if (curLang) {
+            Window.getLang(variables[21].Value);
+        }
+    },
+    onHideWindow: function (winId, eleIds) {
+        var frameName = "frame_" + winId,
+            frameScript = ProjectScript.frame[frameName];
+        //字符串转数组
+        eleIds = eleIds.split(",");
+        eleIds.map(function (eleId) {
+            if (!eleId) return;
+            var element = document.getElementById(eleId);
+            if (!element) return;
+            //变量名
+            var symNameVar = element.GetAttr("sym-type") + "_hide";
+            //变量脚本
+            symScriptVar = frameScript[symNameVar];
+            if (symScriptVar != undefined) symScriptVar(element);
+        });
+    },
+    ShowFirstWindow: function (element) {
+        if (!FrameIdToNameToNoDB)
+            return console.error("FrameIdToNameToNoDB is not define");
+        var firstFrameIndex = 0,
+            firstFrameNo = FrameIdToNameToNoDB["NO"][firstFrameIndex];
+        //判断是否是子画面
+        while (subPages[firstFrameNo]) {
+            firstFrameIndex += 1;
+            firstFrameNo = FrameIdToNameToNoDB["NO"][firstFrameIndex];
+        }
+        Window.getOperationInfo(element, function (info) {
+            if (info === null) return;
+            info.Result = firstFrameNo;
+            Window.logOperationInfo(info);
+        });
+        this.ShowByNo(firstFrameNo, null);
+    },
+    ShowLastWindow: function (element) {
+        if (!FrameIdToNameToNoDB)
+            return console.error("FrameIdToNameToNoDB is not define");
+        var allFrameLen = FrameIdToNameToNoDB["NO"].length,
+            lastFrameIndex = allFrameLen - 1,
+            lastFrameNo = FrameIdToNameToNoDB["NO"][lastFrameIndex];
+        //判断是否是子画面
+        while (subPages[lastFrameNo]) {
+            lastFrameIndex -= 1;
+            if (lastFrameIndex < 0) {
+                break;
+            } else {
+                lastFrameNo = FrameIdToNameToNoDB["NO"][lastFrameIndex];
+            }
+        }
+        Window.getOperationInfo(element, function (info) {
+            if (info === null) return;
+            info.Result = lastFrameNo;
+            Window.logOperationInfo(info);
+        });
+        this.ShowByNo(lastFrameNo, null);
+    },
+    ShowNextWindow: function (element) {
+        if (!hai.ActivityManage.getCurrentFrameId())
+            return console.error("currentFrameId is not define");
+        var currentEleId = hai.ActivityManage.getCurrentFrameId(),
+            currentEleIdIndex = hai.inArray(
+                currentEleId,
+                FrameIdToNameToNoDB["ID"]
+            );
+        if (currentEleIdIndex == -1)
+            return console.error("currentFrameId is no in FrameIdToNameToNoDB");
+        var currentEleNextNo = FrameIdToNameToNoDB["NO"][currentEleIdIndex],
+            currentEleNextNoIndex = currentEleIdIndex,
+            noLength = FrameIdToNameToNoDB["NO"].length;
+        do {
+            currentEleNextNoIndex = currentEleNextNoIndex + 1;
+            if (currentEleNextNoIndex < noLength) {
+                currentEleNextNo =
+                    FrameIdToNameToNoDB["NO"][currentEleNextNoIndex];
+            } else {
+                return; // 没有下一个画面
+            }
+        } while (subPages[currentEleNextNo]);
+        this.ShowByNo(currentEleNextNo, null);
+        //显示下一个画面
+        Window.getOperationInfo(element, function (info) {
+            if (info === null) return;
+            info.Origin = parseInt(currentEleNextNo, 10) - 1;
+            info.Result = currentEleNextNo;
+            Window.logOperationInfo(info);
+        });
+    },
+    ShowPreviousWindow: function (element) {
+        if (!hai.ActivityManage.getCurrentFrameId())
+            return console.error("currentFrameId is not define");
+        var currentEleId = hai.ActivityManage.getCurrentFrameId(),
+            currentEleIdIndex = hai.inArray(
+                currentEleId,
+                FrameIdToNameToNoDB["ID"]
+            );
+        if (currentEleIdIndex == -1)
+            return console.error("currentFrameId is no in FrameIdToNameToNoDB");
+        var currentElePrevNo = FrameIdToNameToNoDB["NO"][currentEleIdIndex],
+            currentElePrevNoIndex = currentEleIdIndex;
+        do {
+            currentElePrevNoIndex = currentElePrevNoIndex - 1;
+            if (currentElePrevNoIndex >= 0) {
+                currentElePrevNo =
+                    FrameIdToNameToNoDB["NO"][currentElePrevNoIndex];
+            } else {
+                return; // 没有上一个画面
+            }
+        } while (subPages[currentElePrevNo]);
+        // 显示上一个画面
+        this.ShowByNo(currentElePrevNo, null);
+        Window.getOperationInfo(element, function (info) {
+            if (info === null) return;
+            info.Origin = parseInt(currentElePrevNo, 10) + 1;
+            info.Result = currentElePrevNo;
+            Window.logOperationInfo(info);
+        });
+    },
+    DisplaySync: function (value) {
+        var hashParams = getHashParams();
+        if (hashParams.share && hashParams.share == 1) {
+            // 分享不需要同步
+            return;
+        }
+        switch (displaySyncType) {
+            case "yes":
+                // 画面同步
+                this.ShowByNo(value, null, true);
+                break;
+            case "no":
+                // 画面不同步
+                break;
+            case "custom":
+                // 画面同步控制
+                if (displaySyncId == "0") {
+                    this.ShowByNo(value, null, true);
+                } else {
+                    //如果绑定的变量为true则同步画面
+                    var disVar = variables[displaySyncId];
+                    if (typeof disVar != "undefined") {
+                        if (disVar.Value) {
+                            this.ShowByNo(value, null, true);
+                        }
+                    } else {
+                        //默认同步
+                        this.ShowByNo(value, null, true);
+                    }
+                }
+
+                break;
+        }
+    },
+    CloseCamVoice: function () {
+        hai.emitMessage("closeCamVoice");
+    },
+    selectExportDb: function (data) {
+        for (var i = 0; i < data.dbs.length; i++) {
+            if (data.dbs[i].id == -1) {
+                data.dbs[i].checked = true;
+            } else {
+                data.dbs[i].checked = false;
+            }
+        }
+        hai.use("popup", function () {
+            hai.popup.simpleOptions(
+                sysLang.selectExportDatabase,
+                data.dbs,
+                function (list) {
+                    var dbs = [];
+                    for (var i = 0; i < data.dbs.length; i++) {
+                        if (data.dbs[i].checked) {
+                            dbs.push(data.dbs[i]);
+                        }
+                    }
+                    socket.emit(
+                        "export-dblist",
+                        data.ext.saveDir,
+                        data.ext.groups,
+                        dbs,
+                        data.ext.format
+                    );
+                },
+                function () {
+                    Window.Toast(sysLang.cancelled, 1000);
+                }
+            );
+        });
+    },
+    ElementBelongWin: function (symId, curWinId) {
+        var curRecord = !window.elementBelongWin ? [] : window.elementBelongWin;
+        var isAddData = true;
+        if (!window.elementBelongWin) {
+            window.elementBelongWin = [];
+        }
+        if (curRecord.length > 0) {
+            curRecord.forEach(function (item) {
+                if (item.eleId == symId) {
+                    isAddData = false;
+                }
+            });
+        }
+        isAddData &&
+            window.elementBelongWin.push({ winId: +curWinId, eleId: symId });
+    },
+    IsTvbox: function () {
+        var curUserAgent = navigator.userAgent;
+        if (
+            curUserAgent.indexOf("rk322x-box") > -1 ||
+            curUserAgent.indexOf("TVBox") > -1
+        ) {
+            return true;
+        } else {
+            return false;
+        }
+    },
+    numColChg: function (winId, symId, numValue) {
+        var index = hai.inArray(winId, CurrentActivityFrameList);
+        if (index == -1) return;
+        var element = document.getElementById(symId + "-si");
+        if (element) {
+            var numRange = JSON.parse(
+                element.GetAttr("TxtColor-dynamic-NumberArray")
+            );
+            if (numRange.length == 0) return;
+            var colorRange = JSON.parse(
+                element.GetAttr("TxtColor-dynamic-ColorArray")
+            );
+            var numType = 0;
+            if (typeof numValue == "boolean") {
+                if (numValue) {
+                    numValue = 1;
+                } else {
+                    numValue = 0;
+                }
+            }
+            var last = "";
+            var cur = 0;
+            for (var num in numRange) {
+                cur = numRange[num];
+                numType = num;
+                if (
+                    (last != "" && last < numValue && numValue <= cur) ||
+                    (last == "" && numValue <= cur)
+                ) {
+                    break;
+                } else {
+                    last = cur;
+                }
+            }
+            var tElement = document.getElementById(symId + "-at");
+            if (tElement) {
+                tElement.style.color = colorRange[numType];
+            }
+        }
+    },
+    strToutf8: function (str) {
+        return eval("'" + encodeURI(str).replace(/%/gm, "\\x") + "'");
+    },
+    strTounicode: function (text) {
+        text = escape(text.toString()).replace(/\+/g, "%2B");
+        var matches = text.match(/(%([0-9A-F]{2}))/gi);
+        if (matches) {
+            for (var matchid = 0; matchid < matches.length; matchid++) {
+                var code = matches[matchid].substring(1, 3);
+                if (parseInt(code, 16) >= 128) {
+                    text = text.replace(matches[matchid], "%u00" + code);
+                }
+            }
+        }
+        text = text.replace("%25", "%u0025");
+        return text;
+    },
+    exchange: function (str) {
+        if (!str.trim().length) return "";
+        str = str.trim();
+        var strLeng = str.length;
+        var res = "";
+        var temp = "";
+        for (var i = 0; i < strLeng; i++) {
+            if (i === strLeng - 1 && strLeng % 2 !== 0) {
+                res += str[i];
+            } else if (i % 2 === 0) {
+                temp = str[i];
+            } else {
+                res += str[i] + temp;
+                temp = "";
+            }
+        }
+        return res;
+    },
+    historyTableExport: function () {},
+    ShowWindowById: function (number, subLocation, isSystemWinNoChanged) {
+        // 判断画面id，name，no互转表是否存在
+        if (!FrameIdToNameToNoDB) {
+            throw new Error("FrameIdToNameToNoDB is error");
+        }
+        // 取出对应位置
+        var index = hai.inArray(number, FrameIdToNameToNoDB.NO);
+        if (index != -1) {
+            // 利用id创建画面
+            this.ShowById(
+                FrameIdToNameToNoDB.ID[index],
+                subLocation,
+                isSystemWinNoChanged
+            );
+        }
+    },
+    HideWindowById: function (number) {
+        // 判断画面id，name，no互转表是否存在
+        if (!FrameIdToNameToNoDB) {
+            throw new Error("FrameIdToNameToNoDB is error");
+        }
+        // 取出对应位置
+        var index = hai.inArray(number, FrameIdToNameToNoDB.NO);
+        if (index != -1) {
+            // 利用id创建画面
+            this.HideById(FrameIdToNameToNoDB.ID[index]);
+        }
+    },
+};
+
+export const Device = {
+    freeProtocol: {
+        write: function backendOnly() {
+            console.log("backend only function");
+        },
+        readSpecificLength: function backendOnly() {
+            console.log("backend only function");
+        },
+        readLastMillisecond: function backendOnly() {
+            console.log("backend only function");
+        },
+    },
+    memory: {
+        alloc: function backendOnly() {
+            console.log("backend only function");
+        },
+        concat: function backendOnly() {
+            console.log("backend only function");
+        },
+        fromUTF8: function backendOnly() {
+            console.log("backend only function");
+        },
+        crc16Modulebus: function backendOnly() {
+            console.log("backend only function");
+        },
+    },
+    database: {
+        createDatabase: function backendOnly() {
+            console.log("backend only function");
+        },
+        deleteDatabase: function backendOnly() {
+            console.log("backend only function");
+        },
+        flush: function backendOnly() {
+            console.log("backend only function");
+        },
+        getDatabaseFiles: function backendOnly() {
+            console.log("backend only function");
+        },
+        exec: function backendOnly() {
+            console.log("backend only function");
+        },
+        execTransaction: function backendOnly() {
+            console.log("backend only function");
+        },
+        get: function backendOnly() {
+            console.log("backend only function");
+        },
+        query: function backendOnly() {
+            console.log("backend only function");
+        },
+    },
+    ModbusRead: function backendOnly() {
+        console.log("backend only function");
+    },
+    ModbusWrite: function backendOnly() {
+        console.log("backend only function");
+    },
+    ModbusRead32: function backendOnly() {
+        console.log("backend only function");
+    },
+    ModbusWrite32: function backendOnly() {
+        console.log("backend only function");
+    },
+    ModbusReadBatch: function backendOnly() {
+        console.log("backend only function");
+    },
+    ModbusWriteBatch: function backendOnly() {
+        console.log("backend only function");
+    },
+};
