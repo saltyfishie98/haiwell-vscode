@@ -7,10 +7,7 @@ import {
     PropertyInfo,
     VariableDefinition,
 } from "./types";
-import {
-    PREDEFINED_OBJECT_PROPERTY_MAP,
-    PREDEFINED_VARIABLES,
-} from "./predefined";
+import { PREDEFINED_OBJECTS, PREDEFINED_VARIABLES } from "./predefined";
 
 export class ProjectObjectCache {
     private static instance: ProjectObjectCache;
@@ -383,7 +380,7 @@ export class ProjectObjectCache {
     isObjectDefined(objectName: string): boolean {
         return (
             this.variableDefinitions.has(objectName) ||
-            PREDEFINED_OBJECT_PROPERTY_MAP.hasOwnProperty(objectName) ||
+            PREDEFINED_OBJECTS.hasOwnProperty(objectName) ||
             PREDEFINED_VARIABLES.hasOwnProperty(objectName)
         );
     }
@@ -394,7 +391,7 @@ export class ProjectObjectCache {
             return definition.properties;
         }
 
-        const predefined = PREDEFINED_OBJECT_PROPERTY_MAP[objectName];
+        const predefined = PREDEFINED_OBJECTS[objectName];
         if (predefined) {
             return predefined;
         }

@@ -1,11 +1,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import {
-    PREDEFINED_OBJECT_PROPERTY_MAP,
-    PREDEFINED_VARIABLES,
-} from "../predefined";
+import { PREDEFINED_OBJECTS, PREDEFINED_VARIABLES } from "../predefined";
 import { ProjectObjectCache } from "../project_object_cache";
-import { make_type, PropertyInfo } from "../types";
+import { make_type, PropertyInfo, ValueType } from "../types";
 
 interface ScopeInfo {
     name: string;
@@ -32,6 +29,7 @@ export class HaiwellScriptCompletionProvider
     implements vscode.CompletionItemProvider
 {
     private diagnosticCollection: vscode.DiagnosticCollection;
+    private property_children?: PropertyInfo[];
 
     constructor() {
         this.diagnosticCollection =
@@ -48,9 +46,9 @@ export class HaiwellScriptCompletionProvider
             .lineAt(position)
             .text.substring(0, position.character);
 
-        const dot = linePrefix.match(/(\w+)\.$/);
+        const dot = linePrefix.match(/((\w+)\.)+$/);
         if (dot) {
-            const objectName = dot[1];
+            const objectName = dot[0].split(".").filter((s) => s !== "");
             const items = await this.getPropertyCompletions(
                 objectName,
                 document,
@@ -209,12 +207,12 @@ export class HaiwellScriptCompletionProvider
         }
 
         // Predefined objects
-        for (const objectName of Object.keys(PREDEFINED_OBJECT_PROPERTY_MAP)) {
+        for (const objectName of Object.keys(PREDEFINED_OBJECTS)) {
             if (addedObjects.has(objectName)) {
                 continue;
             }
 
-            const properties = PREDEFINED_OBJECT_PROPERTY_MAP[objectName];
+            const properties = PREDEFINED_OBJECTS[objectName];
             const item = new vscode.CompletionItem(
                 objectName,
                 vscode.CompletionItemKind.Class
@@ -817,22 +815,61 @@ export class HaiwellScriptCompletionProvider
     }
 
     private async getPropertyCompletions(
-        objectName: string,
+        obj: string[],
         document: vscode.TextDocument,
         position: vscode.Position
     ): Promise<vscode.CompletionItem[]> {
-        // First look for local object literal properties in the current document
-        const localProps = this.getLocalObjectProperties(
-            objectName,
-            document,
-            position
-        );
+        const getInitialProperties = (
+            objName: string,
+            document: any,
+            position: any
+        ): PropertyInfo[] => {
+            const localProps = this.getLocalObjectProperties(
+                objName,
+                document,
+                position
+            );
 
-        const cache = ProjectObjectCache.getInstance();
-        const cachedProps = cache.getObjectProperties(objectName);
+            if (localProps.length > 0) {
+                return localProps;
+            }
+
+            const cache = ProjectObjectCache.getInstance();
+            return cache.getObjectProperties(objName);
+        };
+
+        const get_props = (obj_names: string[]): PropertyInfo[] => {
+            if (obj_names.length === 0) {
+                return [];
+            }
+
+            const [firstObjName, ...restNames] = obj_names;
+            const initialProps = getInitialProperties(
+                firstObjName,
+                document,
+                position
+            );
+
+            return (
+                restNames.reduce<PropertyInfo[] | undefined>(
+                    (children, name) => {
+                        if (!children) {
+                            return undefined;
+                        }
+
+                        const property = children.find((p) => p.name === name);
+
+                        return property?.type.id === "Object"
+                            ? property.type.child
+                            : undefined;
+                    },
+                    initialProps
+                ) ?? []
+            );
+        };
 
         // Prefer local properties if available, otherwise fall back to cached/project definitions
-        const properties = localProps.length > 0 ? localProps : cachedProps;
+        const properties = get_props(obj);
 
         if (properties.length === 0) {
             return [];
@@ -843,7 +880,7 @@ export class HaiwellScriptCompletionProvider
                 prop.name,
                 vscode.CompletionItemKind.Property
             );
-            item.detail = `${prop.name}: ${prop.type}`;
+            item.detail = `${prop.name}: ${prop.type.id}`;
             item.insertText = prop.name;
 
             const md = new vscode.MarkdownString();

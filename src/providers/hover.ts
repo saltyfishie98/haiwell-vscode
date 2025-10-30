@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { ProjectObjectCache } from "../project_object_cache";
-import { PREDEFINED_OBJECT_PROPERTY_MAP } from "../predefined";
+import { PREDEFINED_OBJECTS } from "../predefined";
 
 export class HaiwellScriptHoverProvider implements vscode.HoverProvider {
     async provideHover(
@@ -83,7 +83,7 @@ export class HaiwellScriptHoverProvider implements vscode.HoverProvider {
                 definition.properties.slice(0, 10).forEach((p) => {
                     markdown.appendMarkdown(`- \`${p.name}\`: ${p.type}\n`);
                 });
-            } else if (PREDEFINED_OBJECT_PROPERTY_MAP[objectName]) {
+            } else if (PREDEFINED_OBJECTS[objectName]) {
                 markdown.appendMarkdown(`\n\nPredefined object`);
             } else {
                 markdown.appendMarkdown(`\n\n⚠️ Not defined`);

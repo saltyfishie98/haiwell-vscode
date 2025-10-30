@@ -1,26 +1,26 @@
-import {
-    make_type,
-    ObjectPropertyMap,
-    PropertyInfo,
-    VariableInfo,
-} from "./types";
+import { make_type, PropertyInfo, VariableInfo } from "./types";
 
-export const PREDEFINED_OBJECT_PROPERTY_MAP: ObjectPropertyMap = {
-    Window: [
-        { name: "width", type: make_type.Number() },
-        { name: "height", type: make_type.Number() },
-        { name: "title", type: make_type.String() },
-        { name: "close", type: make_type.Function() },
-        { name: "open", type: make_type.Function() },
-        { name: "location", type: make_type.String() },
-        { name: "focus", type: make_type.Function() },
-        { name: "blur", type: make_type.Function() },
-    ],
-    Console: [
-        { name: "log", type: make_type.Function() },
-        { name: "error", type: make_type.Function() },
-        { name: "warn", type: make_type.Function() },
-        { name: "info", type: make_type.Function() },
+export const PREDEFINED_OBJECTS: {
+    [key: string]: PropertyInfo[];
+} = {
+    Common: [
+        { name: "MobileBarcodescanner", type: make_type.Function() },
+        {
+            name: "Format",
+            type: make_type.Function("num: number", "type_str: string"),
+        },
+        {
+            name: "logger",
+            type: make_type.Object({
+                log: make_type.Function("fmt: string"),
+                debug: make_type.Function("fmt: string"),
+                info: make_type.Function("fmt: string"),
+                trace: make_type.Function("fmt: string"),
+                warn: make_type.Function("fmt: string"),
+                error: make_type.Function("fmt: string"),
+                note: make_type.Function("fmt: string"),
+            }),
+        },
     ],
     Math: [
         { name: "random", type: make_type.Function() },

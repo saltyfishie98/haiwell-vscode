@@ -11,13 +11,19 @@ type TypeId =
     | "Any"
     | "Unknown";
 
+export type FunctionParam = { name: string; type: string };
+
 export type StringType = { id: "String"; value_len?: number };
 export type NumberType = { id: "Number" };
-export type ObjectType = { id: "Object"; child?: ValueType };
-export type FunctionType = { id: "Function"; params?: string[] };
+export type FunctionType = { id: "Function"; params?: FunctionParam[] };
 export type BooleanType = { id: "Boolean" };
 export type AnyType = { id: "Any" };
 export type UnknownType = { id: "Unknown"; str?: string };
+
+export type ObjectType = {
+    id: "Object";
+    child?: { name: string; type: ValueType }[];
+};
 
 export type ValueType =
     | StringType
@@ -53,31 +59,45 @@ export const make_type = {
         };
     },
 
-    Object: (child?: ValueType): ValueType => {
+    Object: (child: { [key: string]: ValueType }): ValueType => {
+        const out = Object.entries(child).map(([k, v]) => {
+            return {
+                name: k,
+                type: v,
+            };
+        });
+
         return {
             id: "Object",
-            child: child,
+            child: out,
         };
     },
 
     Function: (...params: string[]): ValueType => {
+        const p = params.map((p): FunctionParam => {
+            let [n, t] = p.split(":");
+            t = typeof t === "undefined" ? "any" : t.trim();
+            n = n.trim();
+
+            return {
+                name: n,
+                type: t,
+            };
+        });
+
         return {
             id: "Function",
-            params: params,
+            params: p,
         };
     },
 };
-
-export interface ObjectPropertyMap {
-    [key: string]: PropertyInfo[];
-}
 
 export interface VariableInfo {
     type: ValueType;
     rawType: string;
     // optional source line in the CSV (1-based)
     sourceLine?: number;
-
+    // optional human readable description from CSV
     description?: string;
 }
 
