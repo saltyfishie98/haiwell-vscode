@@ -2,32 +2,93 @@
  * Type definitions for Haiwell Script Extension
  */
 
+type TypeId =
+    | "String"
+    | "Number"
+    | "Object"
+    | "Function"
+    | "Boolean"
+    | "Any"
+    | "Unknown";
+
+export type StringType = { id: "String"; value_len?: number };
+export type NumberType = { id: "Number" };
+export type ObjectType = { id: "Object"; child?: ValueType };
+export type FunctionType = { id: "Function"; params?: string[] };
+export type BooleanType = { id: "Boolean" };
+export type AnyType = { id: "Any" };
+export type UnknownType = { id: "Unknown"; str?: string };
+
+export type ValueType =
+    | StringType
+    | NumberType
+    | ObjectType
+    | FunctionType
+    | BooleanType
+    | AnyType
+    | UnknownType;
+
+function id_type(id: TypeId): ValueType {
+    return {
+        id: id,
+    };
+}
+
+export const make_type = {
+    Number: (): ValueType => id_type("String"),
+    Boolean: (): ValueType => id_type("Boolean"),
+    Any: (): ValueType => id_type("Any"),
+
+    Unknown: (str?: string): ValueType => {
+        return {
+            id: "Unknown",
+            str: str,
+        };
+    },
+
+    String: (length?: number): ValueType => {
+        return {
+            id: "String",
+            value_len: length,
+        };
+    },
+
+    Object: (child?: ValueType): ValueType => {
+        return {
+            id: "Object",
+            child: child,
+        };
+    },
+
+    Function: (...params: string[]): ValueType => {
+        return {
+            id: "Function",
+            params: params,
+        };
+    },
+};
 
 export interface ObjectPropertyMap {
     [key: string]: PropertyInfo[];
 }
 
 export interface VariableInfo {
-    type: string;
+    type: ValueType;
     rawType: string;
     // optional source line in the CSV (1-based)
     sourceLine?: number;
-    // optional human readable description from CSV
+
     description?: string;
-    // optional string length for string-like types
-    stringLength?: number;
 }
 
 export interface PropertyInfo {
     name: string;
-    type: string;
+    type: ValueType;
     rawType?: string;
     // optional source line in the CSV (1-based)
     sourceLine?: number;
     // optional human readable description from CSV
     description?: string;
-    // optional string length for string-like types
-    stringLength?: number;
 }
 
 export interface ObjectUsage {
@@ -60,9 +121,9 @@ export interface LanguageConfig {
 }
 
 export const DEFAULT_LANGUAGE_CONFIG: LanguageConfig = {
-    objectPrefix: '$',
-    objectSeparator: '.',
-    fileExtensions: ['.hws', '.hwscript']
+    objectPrefix: "$",
+    objectSeparator: ".",
+    fileExtensions: [".hws", ".hwscript"],
 };
 
 /**
@@ -84,7 +145,7 @@ export class DollarObjectParser {
             matches.push({
                 fullMatch: match[0],
                 objectName: match[1],
-                propertyName: match[2]
+                propertyName: match[2],
             });
         }
 
@@ -94,7 +155,10 @@ export class DollarObjectParser {
     /**
      * Check if a position in text is within a $Object reference
      */
-    static isInDollarObject(text: string, position: number): DollarObjectMatch | null {
+    static isInDollarObject(
+        text: string,
+        position: number
+    ): DollarObjectMatch | null {
         const matches = this.parse(text);
 
         for (const match of matches) {
@@ -114,7 +178,7 @@ export class DollarObjectParser {
      */
     static extractObjectNames(text: string): string[] {
         const matches = this.parse(text);
-        const uniqueObjects = new Set(matches.map(m => m.objectName));
+        const uniqueObjects = new Set(matches.map((m) => m.objectName));
         return Array.from(uniqueObjects);
     }
 }

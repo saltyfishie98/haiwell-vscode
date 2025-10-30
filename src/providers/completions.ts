@@ -5,7 +5,7 @@ import {
     PREDEFINED_VARIABLES,
 } from "../predefined";
 import { ProjectObjectCache } from "../project_object_cache";
-import { PropertyInfo } from "../types";
+import { make_type, PropertyInfo } from "../types";
 
 interface ScopeInfo {
     name: string;
@@ -858,9 +858,12 @@ export class HaiwellScriptCompletionProvider
                 md.appendMarkdown(`${prop.description}\n`);
             }
 
-            if (prop.type === "string" && prop.stringLength !== undefined) {
+            if (
+                prop.type.id === "String" &&
+                prop.type.value_len !== undefined
+            ) {
                 md.appendMarkdown("---\n");
-                md.appendMarkdown(`**length**: ${prop.stringLength}`);
+                md.appendMarkdown(`**length**: ${prop.type.value_len}`);
             }
 
             item.documentation = md;
@@ -919,7 +922,10 @@ export class HaiwellScriptCompletionProvider
             console.error("Error extracting local object properties:", err);
         }
 
-        return Array.from(props).map((name) => ({ name, type: "any" }));
+        return Array.from(props).map((name) => ({
+            name,
+            type: make_type.Any(),
+        }));
     }
 
     /**

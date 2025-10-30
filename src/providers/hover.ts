@@ -9,7 +9,10 @@ export class HaiwellScriptHoverProvider implements vscode.HoverProvider {
         position: vscode.Position,
         token: vscode.CancellationToken
     ): Promise<vscode.Hover | undefined> {
-        const range = document.getWordRangeAtPosition(position, /\$\w+(\.\w+)?/);
+        const range = document.getWordRangeAtPosition(
+            position,
+            /\$\w+(\.\w+)?/
+        );
         if (!range) {
             // fallback: bare identifier that may be a global symbol from lib
             const wordRange = document.getWordRangeAtPosition(
@@ -25,7 +28,9 @@ export class HaiwellScriptHoverProvider implements vscode.HoverProvider {
             if (g) {
                 const md = new vscode.MarkdownString();
                 md.appendCodeblock(name, "hwscript");
-                md.appendMarkdown(`\n\nDefined in: \`${path.basename(g.sourceFile)}\``);
+                md.appendMarkdown(
+                    `\n\nDefined in: \`${path.basename(g.sourceFile)}\``
+                );
                 return new vscode.Hover(md, wordRange);
             }
 
@@ -45,14 +50,20 @@ export class HaiwellScriptHoverProvider implements vscode.HoverProvider {
         markdown.isTrusted = true;
 
         if (propertyName) {
-            markdown.appendCodeblock(`$${objectName}.${propertyName}`, "hwscript");
+            markdown.appendCodeblock(
+                `$${objectName}.${propertyName}`,
+                "hwscript"
+            );
             const properties = cache.getObjectProperties(objectName);
             const prop = properties.find((p) => p.name === propertyName);
             if (prop) {
-                markdown.appendMarkdown(`\n\nType: \`${prop.type}\``);
-                if (prop.type === "string" && prop.stringLength !== undefined) {
+                markdown.appendMarkdown(`\n\nType: \`${prop.type.id}\``);
+                if (
+                    prop.type.id === "String" &&
+                    prop.type.value_len !== undefined
+                ) {
                     markdown.appendMarkdown(
-                        `\n\nString length: **${prop.stringLength}**`
+                        `\n\nString length: **${prop.type.value_len}**`
                     );
                 }
                 if (prop.description) {
@@ -64,7 +75,9 @@ export class HaiwellScriptHoverProvider implements vscode.HoverProvider {
             const definition = cache.getObjectDefinition(objectName);
             if (definition) {
                 markdown.appendMarkdown(
-                    `\n\nDefined in: \`${path.basename(definition.sourceFile)}\``
+                    `\n\nDefined in: \`${path.basename(
+                        definition.sourceFile
+                    )}\``
                 );
                 markdown.appendMarkdown(`\n\n**Properties**:\n`);
                 definition.properties.slice(0, 10).forEach((p) => {

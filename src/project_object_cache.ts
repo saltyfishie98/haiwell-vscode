@@ -1,7 +1,16 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { GlobalSymbol, ObjectUsage, PropertyInfo, VariableDefinition } from "./types";
-import { PREDEFINED_OBJECT_PROPERTY_MAP, PREDEFINED_VARIABLES } from "./predefined";
+import {
+    GlobalSymbol,
+    make_type,
+    ObjectUsage,
+    PropertyInfo,
+    VariableDefinition,
+} from "./types";
+import {
+    PREDEFINED_OBJECT_PROPERTY_MAP,
+    PREDEFINED_VARIABLES,
+} from "./predefined";
 
 export class ProjectObjectCache {
     private static instance: ProjectObjectCache;
@@ -100,7 +109,9 @@ export class ProjectObjectCache {
             }
         }
 
-        console.log(`Loaded ${this.globalSymbols.size} global symbols from lib`);
+        console.log(
+            `Loaded ${this.globalSymbols.size} global symbols from lib`
+        );
     }
 
     async parseLibScriptFile(fileUri: vscode.Uri): Promise<void> {
@@ -109,15 +120,16 @@ export class ProjectObjectCache {
             const text = document.getText();
 
             // // Match ES module named exports: export const/name/function/class X
-            const exportDecl = /export\s+(?:const|let|var|function|class)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g;
+            const exportDecl =
+                /export\s+(?:const|let|var|function|class)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g;
             let m: RegExpExecArray | null;
             while ((m = exportDecl.exec(text)) !== null) {
                 const name = m[1];
                 const kind = /function/.test(m[0])
                     ? "function"
                     : /class/.test(m[0])
-                        ? "class"
-                        : "variable";
+                    ? "class"
+                    : "variable";
                 this.globalSymbols.set(name, {
                     name,
                     kind: kind as GlobalSymbol["kind"],
@@ -131,7 +143,9 @@ export class ProjectObjectCache {
                 const body = m[1];
                 const parts = body.split(",").map((p) => p.trim());
                 for (const p of parts) {
-                    const name = p.includes(" as ") ? p.split(" as ")[1].trim() : p.split(" as ")[0].trim();
+                    const name = p.includes(" as ")
+                        ? p.split(" as ")[1].trim()
+                        : p.split(" as ")[0].trim();
                     if (name) {
                         this.globalSymbols.set(name, {
                             name,
@@ -143,7 +157,8 @@ export class ProjectObjectCache {
             }
 
             // export default function fname() { } or export default class Name {}
-            const exportDefault = /export\s+default\s+(?:function|class)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g;
+            const exportDefault =
+                /export\s+default\s+(?:function|class)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g;
             while ((m = exportDefault.exec(text)) !== null) {
                 const name = m[1];
                 if (name) {
@@ -156,7 +171,8 @@ export class ProjectObjectCache {
             }
 
             // CommonJS exports: module.exports.foo = or exports.foo =
-            const cjs = /(?:module\.exports|exports)\.([A-Za-z_$][A-Za-z0-9_$]*)\s*=/g;
+            const cjs =
+                /(?:module\.exports|exports)\.([A-Za-z_$][A-Za-z0-9_$]*)\s*=/g;
             while ((m = cjs.exec(text)) !== null) {
                 const name = m[1];
                 this.globalSymbols.set(name, {
@@ -165,7 +181,6 @@ export class ProjectObjectCache {
                     sourceFile: fileUri.fsPath,
                 });
             }
-
         } catch (err) {
             console.error(`Error parsing lib script ${fileUri.fsPath}:`, err);
         }
@@ -196,7 +211,10 @@ export class ProjectObjectCache {
 
                 // If quotes are unbalanced on this line, keep appending following lines
                 const countQuotes = (s: string) => (s.match(/"/g) || []).length;
-                while (countQuotes(lineText) % 2 !== 0 && idx + 1 < rawLines.length) {
+                while (
+                    countQuotes(lineText) % 2 !== 0 &&
+                    idx + 1 < rawLines.length
+                ) {
                     idx++;
                     lineText += "\n" + rawLines[idx];
                 }
@@ -210,7 +228,10 @@ export class ProjectObjectCache {
                     if (inQuotes) {
                         if (ch === '"') {
                             // double quote escape
-                            if (i + 1 < lineText.length && lineText[i + 1] === '"') {
+                            if (
+                                i + 1 < lineText.length &&
+                                lineText[i + 1] === '"'
+                            ) {
                                 field += '"';
                                 i++; // skip escaped quote
                             } else {
@@ -280,19 +301,28 @@ export class ProjectObjectCache {
                     c.replace(/^['\"]|['\"]$/g, "").trim()
                 );
                 const name = cols[nameIdx >= 0 ? nameIdx : 0] || "";
-                let rawType = (typeIdx >= 0 ? cols[typeIdx] : cols[1] || "").toString();
+                let rawType = (
+                    typeIdx >= 0 ? cols[typeIdx] : cols[1] || ""
+                ).toString();
                 rawType = rawType.trim();
 
                 // map common vendor types to normalized types
                 const t = rawType.toLowerCase();
-                let mappedType = "any";
+                let mappedType = make_type.Any();
                 if (
                     t.includes("char") ||
                     t.includes("string") ||
                     t.includes("varchar") ||
                     t.includes("text")
                 ) {
-                    mappedType = "string";
+                    let stringLength: number | undefined;
+                    if (stringLenIdx >= 0) {
+                        const sl = parseInt(cols[stringLenIdx] || "", 10);
+                        if (!isNaN(sl)) {
+                            stringLength = sl;
+                        }
+                    }
+                    mappedType = make_type.String(stringLength);
                 } else if (
                     t.includes("int") ||
                     t.includes("float") ||
@@ -302,24 +332,17 @@ export class ProjectObjectCache {
                     t.includes("short") ||
                     t.includes("long")
                 ) {
-                    mappedType = "number";
+                    mappedType = make_type.Number();
                 } else if (t.includes("bool")) {
-                    mappedType = "boolean";
+                    mappedType = make_type.Boolean();
                 } else if (t.length === 0) {
-                    mappedType = "any";
+                    mappedType = make_type.Any();
                 } else {
-                    mappedType = t; // unknown type, keep raw
+                    mappedType = make_type.Unknown(t); // unknown type, keep raw
                 }
 
                 const description =
                     descIdx >= 0 ? cols[descIdx] || undefined : undefined;
-                let stringLength: number | undefined;
-                if (stringLenIdx >= 0) {
-                    const sl = parseInt(cols[stringLenIdx] || "", 10);
-                    if (!isNaN(sl)) {
-                        stringLength = sl;
-                    }
-                }
 
                 if (name) {
                     const prop: PropertyInfo = {
@@ -328,12 +351,11 @@ export class ProjectObjectCache {
                         sourceLine: row.line,
                         rawType: rawType,
                     };
+
                     if (description) {
                         prop.description = description;
                     }
-                    if (mappedType === "string" && stringLength !== undefined) {
-                        prop.stringLength = stringLength;
-                    }
+
                     properties.push(prop);
                 }
             }
@@ -359,7 +381,6 @@ export class ProjectObjectCache {
     }
 
     isObjectDefined(objectName: string): boolean {
-
         return (
             this.variableDefinitions.has(objectName) ||
             PREDEFINED_OBJECT_PROPERTY_MAP.hasOwnProperty(objectName) ||
@@ -382,7 +403,7 @@ export class ProjectObjectCache {
         if (usage && usage.properties.size > 0) {
             return Array.from(usage.properties).map((name) => ({
                 name,
-                type: "any",
+                type: make_type.Any(),
             }));
         }
 
@@ -391,7 +412,10 @@ export class ProjectObjectCache {
 
     async getProjectObjects(): Promise<Map<string, ObjectUsage>> {
         const now = Date.now();
-        if (now - this.lastIndexTime > this.INDEX_INTERVAL && !this.isIndexing) {
+        if (
+            now - this.lastIndexTime > this.INDEX_INTERVAL &&
+            !this.isIndexing
+        ) {
             await this.indexProject();
         }
         return this.objectUsageMap;
@@ -414,7 +438,9 @@ export class ProjectObjectCache {
 
             for (const fileUri of files) {
                 try {
-                    const document = await vscode.workspace.openTextDocument(fileUri);
+                    const document = await vscode.workspace.openTextDocument(
+                        fileUri
+                    );
                     this.indexDocument(document);
                 } catch (error) {
                     console.error(`Error indexing ${fileUri.fsPath}:`, error);
