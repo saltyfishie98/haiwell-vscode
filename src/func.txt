@@ -708,6 +708,133 @@ Common.PrintText: function (name, text) {}
 
 Common.PrintLine: function (name, arr) {}
 
+Common.freeProtocol.write: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.freeProtocol.readSpecificLength: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.freeProtocol.readLastMillisecond: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.memory.alloc: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.memory.concat: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.memory.fromUTF8: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.memory.crc16Modulebus: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.database.createDatabase: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.database.deleteDatabase: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.database.flush: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.database.getDatabaseFiles: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.database.exec: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.database.execTransaction: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.database.get: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.database.query: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.logger.log: function (fmt) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      socket.emit("client.fgLog", lv, fmt, args);
+    }
+
+Common.logger.debug: function (fmt) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      socket.emit("client.fgLog", lv, fmt, args);
+    }
+
+Common.logger.info: function (fmt) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      socket.emit("client.fgLog", lv, fmt, args);
+    }
+
+Common.logger.trace: function (fmt) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      socket.emit("client.fgLog", lv, fmt, args);
+    }
+
+Common.logger.warn: function (fmt) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      socket.emit("client.fgLog", lv, fmt, args);
+    }
+
+Common.logger.note: function (fmt) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      socket.emit("client.fgLog", lv, fmt, args);
+    }
+
+Common.logger.error: function (fmt) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      socket.emit("client.fgLog", lv, fmt, args);
+    }
+
+Common.crypto.createHash: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.crypto.createHmac: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.crypto.createCipher: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.crypto.createDecipher: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.crypto.createCipheriv: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.crypto.createDecipheriv: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.crypto.createSign: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Common.crypto.createVerify: function backendOnly() {
+    console.log("backend only function");
+  }
+
 Common.getConnected: function () {}
 
 Common.publish: function (topic, message, opts, callback) {}
@@ -2402,6 +2529,66 @@ Window.HideWindowById: function (number) {
         this.HideById(FrameIdToNameToNoDB.ID[index]);
       }
     }
+
+Device.freeProtocol.write: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.freeProtocol.readSpecificLength: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.freeProtocol.readLastMillisecond: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.memory.alloc: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.memory.concat: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.memory.fromUTF8: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.memory.crc16Modulebus: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.database.createDatabase: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.database.deleteDatabase: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.database.flush: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.database.getDatabaseFiles: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.database.exec: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.database.execTransaction: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.database.get: function backendOnly() {
+    console.log("backend only function");
+  }
+
+Device.database.query: function backendOnly() {
+    console.log("backend only function");
+  }
 
 Device.ModbusRead: function backendOnly() {
     console.log("backend only function");
