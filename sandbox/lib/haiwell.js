@@ -6,7 +6,6 @@ export const Common = {
         //执行app扫码枪
         Window.AppScanCode();
     },
-
     Format: function (num, typeStr) {
         var regex = new RegExp("\\.", "g"); // 使用g表示整个字符串都要匹配
         var result = typeStr.match(regex); //match方法可在字符串内检索指定的值，或找到一个或多个正则表达式的匹配。
@@ -71,31 +70,24 @@ export const Common = {
         }
         return dotCount == 1 ? intStr + "." + dotStr : intStr;
     },
-
     ConvertToBase: function (value, radix) {
         return new Number(value).toString(radix);
     },
-
     ConvertFromBase: function (value, radix) {
         return isNaN(parseInt(value, radix)) ? 0 : parseInt(value, radix);
     },
-
     Local: function () {
         return indexlocal;
     },
-
     SetTimeout: function (callback, times) {
         return setTimeout(callback, times);
     },
-
     SetInterval: function (callback, times) {
         return setInterval(callback, times);
     },
-
     Log: function (content) {
         console.log(content);
     },
-
     Beep: function (myOnTime, myOffTime, myRepeat) {
         var dataJson = {
             type: 3,
@@ -105,7 +97,6 @@ export const Common = {
         };
         socket.emit("BEEPCol", dataJson);
     },
-
     BeepStart: function () {
         var dataJson = {
             type: 1,
@@ -115,7 +106,6 @@ export const Common = {
         };
         socket.emit("BEEPCol", dataJson);
     },
-
     BeepEnd: function () {
         var dataJson = {
             type: 2,
@@ -125,7 +115,6 @@ export const Common = {
         };
         socket.emit("BEEPCol", dataJson);
     },
-
     PausePlayback: function () {
         var audioJson = {
             data: "",
@@ -133,7 +122,6 @@ export const Common = {
         };
         socket.emit("BEEPCol", audioJson);
     },
-
     RTCurveCtrl: function (state) {
         if (state) {
             socket.emit("RTCurveCtrl", true);
@@ -141,7 +129,6 @@ export const Common = {
             socket.emit("RTCurveCtrl", false);
         }
     },
-
     LoadBarLib: function () {
         function loadJs(url, callback) {
             var script = document.createElement("script");
@@ -171,7 +158,6 @@ export const Common = {
             console.log("JsBarcode.code128.min.js load success");
         });
     },
-
     ShowBarCode: function (eleId, content) {
         if (typeof JsBarcode != "undefined") {
             if (content != "") {
@@ -184,7 +170,6 @@ export const Common = {
             }
         }
     },
-
     sysPrint: function (element) {
         if (
             window.navigator.appVersion.includes("Electron") &&
@@ -201,13 +186,11 @@ export const Common = {
             Window.logOperationInfo(info);
         });
     },
-
     sysReboot: function (element) {
         Window.getOperationInfo(element, function (info) {
             socket.emit("sysReboot", info);
         });
     },
-
     SocketSend: function (options, element) {
         Window.getOperationInfo(element, function (info) {
             options = options || {};
@@ -215,14 +198,12 @@ export const Common = {
             hai.socketio.emit(options);
         });
     },
-
     SocketSendWithOpLog: function (options, element) {
         Window.getOperationInfo(element, function (info) {
             options.opinfo = info;
             hai.socketio.emit(options);
         });
     },
-
     GetSend: function (options, url) {
         options = options || {};
         //callback = callback || function () { };
@@ -232,7 +213,6 @@ export const Common = {
             {
                 options: options,
             },
-
             function (data) {
                 // console.log('data1', options);
                 options.res = data;
@@ -248,16 +228,14 @@ export const Common = {
                     : undefined;
                 if (options["winId"]) {
                     //有winId
-                    if (!ProjectScript.frame["frame_" + options["winId"]]) {
+                    if (!ProjectScript.frame["frame_" + options["winId"]])
                         return;
-                    }
                     if (
                         !ProjectScript.frame["frame_" + options["winId"]][
                             communFunction
                         ]
-                    ) {
+                    )
                         return;
-                    }
                     //执行对应的脚本
                     ProjectScript.frame["frame_" + options["winId"]][
                         communFunction
@@ -287,7 +265,6 @@ export const Common = {
             }
         );
     },
-
     Ajax: function (options) {
         if (hai.ajax) {
             hai.ajax(options);
@@ -295,7 +272,6 @@ export const Common = {
             console.error("ajax is not define");
         }
     },
-
     execChange: function (commumType, winId, eleIds, options) {
         var frameName = "frame_" + winId,
             frameScript = ProjectScript.frame[frameName];
@@ -303,14 +279,10 @@ export const Common = {
         //字符串转数组
         eleIds = eleIds.split(",");
         eleIds.map(function (eleId) {
-            if (!eleId) {
-                return;
-            }
+            if (!eleId) return;
             var currentElement = document.getElementById(eleId);
             // console.log(currentElement,'currentElement');
-            if (!currentElement) {
-                return;
-            }
+            if (!currentElement) return;
             //变量名
             var symNameVar =
                 currentElement.GetAttr("sym-type") +
@@ -326,30 +298,23 @@ export const Common = {
                 symScriptVar(options, commumType, currentElement);
         });
     },
-
     IntoNetwork: function () {
         intoNet();
     },
-
     Setting: function () {
         setting();
     },
-
     SystemSetting: function () {
         setting();
     },
-
     SendKey: function (keyCode) {},
-
     testEnd: function () {
         alert("老化工程结束！");
         if (window.MainPage) MainPage.testEnd();
     },
-
     CalcColor: function (color, level) {
         return color;
     },
-
     ConfirmBox: function (confirmText, options) {
         //此函数是浏览器提供 可以将脚本执行停在此处 返回用户选择的 bool类型 然后继续往下执行
         return confirm(confirmText);
@@ -358,7 +323,6 @@ export const Common = {
         //     //title: '我是标题', showCancelButton: true
         // });
     },
-
     CloudInfoBox: function (type, options) {
         //打开云引擎提示框
         if (type == "start") {
@@ -386,7 +350,6 @@ export const Common = {
             GlobalVar.CloudShowInfo = "";
         }
     },
-
     GetAlarm: function (alarmFormat) {
         return RealtimeAlert.ItemsToString(alarmFormat);
 
@@ -415,28 +378,23 @@ export const Common = {
         // //console.log(backInfo;);
         // return backInfo;
     },
-
     RST: function (value, index) {
         var tempValue = Math.pow(2, index);
         return value & ~tempValue;
     },
-
     INV: function (value, index) {
         var tempValue = Math.pow(2, index);
         return value ^ tempValue;
     },
-
     SET: function (value, index) {
         var tempValue = Math.pow(2, index);
         return value | tempValue;
     },
-
     MsgBox: function (content, options) {
         hai.use("popupbox", function () {
             hai.popupbox(content, options);
         });
     },
-
     Quit: function (element) {
         Window.getOperationInfo(element, function (info) {
             socket.emit("IPCQuit", info);
@@ -445,11 +403,9 @@ export const Common = {
         //     nw.App.quit();
         // }
     },
-
     Bee: function () {
         socket.emit("BEE");
     },
-
     controlCameraDown: function (camid, direction, symId) {
         Common.Bee();
         var speed = 1;
@@ -462,7 +418,6 @@ export const Common = {
             symId: symId,
         });
     },
-
     controlCameraUp: function (camid, direction, symId) {
         Common.Bee();
         var speed = 1;
@@ -477,7 +432,6 @@ export const Common = {
             });
         }, 500);
     },
-
     cameraSnapshot: function (camid, symId) {
         Common.Bee();
         Common.SocketSend({
@@ -486,7 +440,6 @@ export const Common = {
             symId: symId,
         });
     },
-
     CloseModal: function (ID, symId) {
         //关闭字符串生成的模态框
         var modalId = ID ? ID : "HMI_MODAL"; //默认Modal ID 为HMI_MODAL
@@ -514,12 +467,10 @@ export const Common = {
             document.body.removeChild(document.getElementById(modalId));
         }
     },
-
     GetBit: function (val, index) {
         //获取正整数化为二进制后第N位上的值
         return (val & Math.pow(2, index)) == 0 ? false : true;
     },
-
     GetBits: function (val) {
         var myBitsArr = new Array();
         for (var i = 0; i < 32; i++) {
@@ -527,7 +478,6 @@ export const Common = {
         }
         return myBitsArr;
     },
-
     ArrayToValue: function (bits) {
         var bitVal = false;
         var val = 0;
@@ -542,9 +492,7 @@ export const Common = {
         }
         return val;
     },
-
     AddFile: function (fileName, filePath) {},
-
     uint8Array2uint16Array: function (uint8Array) {
         var uint16Array = new Uint16Array(uint8Array.length / 2);
         for (var i = 0; i < uint8Array.length; i += 2) {
@@ -553,7 +501,6 @@ export const Common = {
         }
         return uint16Array;
     },
-
     uint16Array2uint8Array: function (uint16Array) {
         var uint8Array = new Uint8Array(uint16Array.length * 2);
         for (var i = 0, j = 0; i < uint16Array.length; ++i, j += 2) {
@@ -562,23 +509,16 @@ export const Common = {
         }
         return uint8Array;
     },
-
     utf8ToGbk: function (utf8Str) {
         console.log("仅支持后台运行");
     },
-
     gbkToUtf8: function (gbkBuffer) {
         console.log("仅支持后台运行");
     },
-
     ReadFile: function (filePath) {},
-
     WriteFile: function (filePath, data) {},
-
     RenameFile: function (oldName, newName, filePath) {},
-
     DeleteFile: function (filePath) {},
-
     BoolToInt: function (bool) {
         if (true === bool) {
             return 1;
@@ -586,7 +526,6 @@ export const Common = {
             return 0;
         }
     },
-
     IntToBool: function (int) {
         if (0 === int) {
             return false;
@@ -594,40 +533,25 @@ export const Common = {
             return true;
         }
     },
-
     BitAnd: function (x, y) {
         var xtype = typeof x;
         var ytype = typeof y;
         if ("number" != xtype || "number" != ytype) {
-            {
-                return;
-            }
+            return;
         }
         return x & y;
     },
-
     BufferCreate: function (zoneCode, zoneLen) {},
-
     BufferGetAt: function (zoneCode, zoneLen) {},
-
     BufferSetAt: function (zoneCode, zoneLen, data) {},
-
     BufferStoreToFile: function (zoneCode, fileName, callback) {},
-
     BufferLoadFromFile: function (zoneCode, fileName, callback) {},
-
     DelDataGroup: function (callback, options) {},
-
     DelAlertRecord: function (callback, options) {},
-
     DelHistoryRecord: function (callback, options) {},
-
     CreateOrOpenDatabase: function (type, databasePath, cb) {},
-
     CloseDatabase: function (type, databasePath, cb) {},
-
     DeleteDatabase: function (type, databasePath, cb) {},
-
     CopyDatabase: function (
         sourceType,
         sourceDatabasePath,
@@ -635,40 +559,25 @@ export const Common = {
         targetDatabasePath,
         cb
     ) {},
-
     QueryDatabase: function (type, databasePath, sql, sucCallback, cb) {},
-
     TraQueryDatabase: function (curDataBase, sql, sucCallback, callback) {},
-
     RunDatabase: function (type, databasePath, sql, sucCallback, cb) {},
-
     TraRunDatabase: function (curDataBase, sql, sucCallback, callback) {},
-
     ExecDatabase: function (type, databasePath, sqlMore, sucCallback, cb) {},
-
     TraExecDatabase: function (curDataBase, sql, sucCallback, callback) {},
-
     TraStaDatabase: function (curDataBase) {},
-
     CommitDatabase: function (curDataBase) {},
-
     RollBackDatabase: function (curDataBase) {},
-
     TarnRunDatabase: function (type, databasePath, callback) {},
-
     BackTask: function (id, element) {
         Window.getOperationInfo(element, function (info) {
             Window.logOperationInfo(info);
             socket.emit("carryOutTheTask", id);
         });
     },
-
     GetRecipeGroupNum: function (options, callback) {},
-
     AddRecipeGroup: function (options, callback) {},
-
     DeleteRecipeGroup: function (options, callback) {},
-
     RecipeToPlcByGroupNo: function (options, callback) {
         var params = {
             taskName: arguments.callee.name,
@@ -676,7 +585,6 @@ export const Common = {
         };
         socket.emit("super.task-run", params);
     },
-
     RecipePlcSaveByGroupNo: function (options, callback) {
         // 转到后端执行 完善超级图元功能
         var params = {
@@ -685,7 +593,6 @@ export const Common = {
         };
         socket.emit("super.task-run", params);
     },
-
     RecipeToPlcByGroupName: function (options, callback) {
         // 转到后端执行 完善超级图元功能
         var params = {
@@ -694,7 +601,6 @@ export const Common = {
         };
         socket.emit("super.task-run", params);
     },
-
     RecipePlcSaveByGroupName: function (options, callback) {
         // 转到后端执行 完善超级图元功能
         var params = {
@@ -704,7 +610,6 @@ export const Common = {
         params.options.isSuper = true;
         socket.emit("super.task-run", params);
     },
-
     historyRecordCsv: function (query, callback) {
         var params = {
             taskName: arguments.callee.name,
@@ -716,7 +621,6 @@ export const Common = {
         };
         socket.emit("super.task-run", params);
     },
-
     recipeRecordCsv: function (query, callback) {
         var _device =
             navigator.platform.indexOf("Win") > -1 ? "pc" : query.position;
@@ -745,7 +649,6 @@ export const Common = {
         };
         socket.emit("super.task-run", params);
     },
-
     alarmRecordCsv: function (query, callback) {
         var _device =
             navigator.platform.indexOf("Win") > -1 ? "pc" : query.position;
@@ -772,15 +675,117 @@ export const Common = {
         };
         socket.emit("super.task-run", params);
     },
-
     PrintText: function (name, text) {},
-
     PrintLine: function (name, arr) {},
-
+    freeProtocol: {
+        write: function backendOnly() {
+            console.log("backend only function");
+        },
+        readSpecificLength: function backendOnly() {
+            console.log("backend only function");
+        },
+        readLastMillisecond: function backendOnly() {
+            console.log("backend only function");
+        },
+    },
+    memory: {
+        alloc: function backendOnly() {
+            console.log("backend only function");
+        },
+        concat: function backendOnly() {
+            console.log("backend only function");
+        },
+        fromUTF8: function backendOnly() {
+            console.log("backend only function");
+        },
+        crc16Modulebus: function backendOnly() {
+            console.log("backend only function");
+        },
+    },
+    database: {
+        createDatabase: function backendOnly() {
+            console.log("backend only function");
+        },
+        deleteDatabase: function backendOnly() {
+            console.log("backend only function");
+        },
+        flush: function backendOnly() {
+            console.log("backend only function");
+        },
+        getDatabaseFiles: function backendOnly() {
+            console.log("backend only function");
+        },
+        exec: function backendOnly() {
+            console.log("backend only function");
+        },
+        execTransaction: function backendOnly() {
+            console.log("backend only function");
+        },
+        get: function backendOnly() {
+            console.log("backend only function");
+        },
+        query: function backendOnly() {
+            console.log("backend only function");
+        },
+    },
+    logger: {
+        log: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+        debug: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+        info: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+        trace: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+        warn: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+        note: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+        error: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+    },
+    crypto: {
+        createHash: function backendOnly() {
+            console.log("backend only function");
+        },
+        createHmac: function backendOnly() {
+            console.log("backend only function");
+        },
+        createCipher: function backendOnly() {
+            console.log("backend only function");
+        },
+        createDecipher: function backendOnly() {
+            console.log("backend only function");
+        },
+        createCipheriv: function backendOnly() {
+            console.log("backend only function");
+        },
+        createDecipheriv: function backendOnly() {
+            console.log("backend only function");
+        },
+        createSign: function backendOnly() {
+            console.log("backend only function");
+        },
+        createVerify: function backendOnly() {
+            console.log("backend only function");
+        },
+    },
     getConnected: function () {},
-
     publish: function (topic, message, opts, callback) {},
-
     graphicAudioPlay: function (element, stage) {
         hailib.define(["audio"], function (audioModule) {
             audioModule.playAudio(element, stage);
