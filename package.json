@@ -37,6 +37,12 @@
                 "path": "./syntaxes/hwscript.tmLanguage.json"
             }
         ],
+        "snippets": [
+            {
+                "language": "hwscript",
+                "path": "./snippets/hwscript.json"
+            }
+        ],
         "commands": [
             {
                 "command": "hwscript.reindexProject",
