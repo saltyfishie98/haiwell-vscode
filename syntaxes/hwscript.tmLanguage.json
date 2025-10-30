@@ -1,118 +1,131 @@
 {
-  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-  "name": "Haiwell Script",
-  "scopeName": "source.hwscript",
-  "patterns": [
-    { "include": "#comments" },
-    { "include": "#strings" },
-    { "include": "#keywords" },
-    { "include": "#dollar-object-access" },
-    { "include": "#numbers" },
-    { "include": "#operators" },
-    { "include": "#functions" },
-    { "include": "#variables" }
-  ],
-  "repository": {
-    "dollar-object-access": {
-      "patterns": [
-        {
-          "name": "variable.language.dollar-object.hwscript",
-          "match": "\\$[A-Za-z_][A-Za-z0-9_]*\\.[A-Za-z_][A-Za-z0-9_]*",
-          "captures": {
-            "0": { "name": "meta.dollar-object-access.hwscript" }
-          }
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "Haiwell Script",
+    "scopeName": "source.hwscript",
+    "patterns": [
+        { "include": "#comments" },
+        { "include": "#strings" },
+        { "include": "#keywords" },
+        { "include": "#dollar-object-access" },
+        { "include": "#numbers" },
+        { "include": "#operators" },
+        { "include": "#functions" },
+        { "include": "#variables" }
+    ],
+    "repository": {
+        "dollar-object-access": {
+            "patterns": [
+                {
+                    "name": "variable.language.dollar-object.hwscript",
+                    "match": "\\$[A-Za-z_][A-Za-z0-9_]*\\.[A-Za-z_][A-Za-z0-9_]*",
+                    "captures": {
+                        "0": { "name": "meta.dollar-object-access.hwscript" }
+                    }
+                },
+                {
+                    "name": "variable.language.dollar.hwscript",
+                    "match": "\\$[A-Za-z_][A-Za-z0-9_]*"
+                }
+            ]
         },
-        {
-          "name": "variable.language.dollar.hwscript",
-          "match": "\\$[A-Za-z_][A-Za-z0-9_]*"
-        }
-      ]
-    },
-    "comments": {
-      "patterns": [
-        { "name": "comment.line.double-slash.hwscript", "match": "//.*$" },
-        { "name": "comment.block.hwscript", "begin": "/\\*", "end": "\\*/" }
-      ]
-    },
-    "strings": {
-      "patterns": [
-        {
-          "name": "string.quoted.double.hwscript",
-          "begin": "\"",
-          "end": "\"",
-          "patterns": [
-            { "name": "constant.character.escape.hwscript", "match": "\\\\." }
-          ]
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.line.double-slash.hwscript",
+                    "match": "//.*$"
+                },
+                {
+                    "name": "comment.block.hwscript",
+                    "begin": "/\\*",
+                    "end": "\\*/"
+                }
+            ]
         },
-        {
-          "name": "string.quoted.single.hwscript",
-          "begin": "'",
-          "end": "'",
-          "patterns": [
-            { "name": "constant.character.escape.hwscript", "match": "\\\\." }
-          ]
-        }
-      ]
-    },
-    "keywords": {
-      "patterns": [
-        {
-          "name": "keyword.control.hwscript",
-          "match": "\\b(if|else|while|for|do|switch|case|break|continue|return|try|catch|finally|throw|with)\\b"
+        "strings": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.hwscript",
+                    "begin": "\"",
+                    "end": "\"",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.hwscript",
+                            "match": "\\\\."
+                        }
+                    ]
+                },
+                {
+                    "name": "string.quoted.single.hwscript",
+                    "begin": "'",
+                    "end": "'",
+                    "patterns": [
+                        {
+                            "name": "constant.character.escape.hwscript",
+                            "match": "\\\\."
+                        }
+                    ]
+                }
+            ]
         },
-        {
-          "name": "storage.type.hwscript",
-          "match": "\\b(var|let|const|function)\\b"
+        "keywords": {
+            "patterns": [
+                {
+                    "name": "keyword.control.hwscript",
+                    "match": "\\b(if|else|while|for|do|switch|case|break|continue|return|try|catch|finally|throw|with)\\b"
+                },
+                {
+                    "name": "storage.type.hwscript",
+                    "match": "\\b(var|function)\\b"
+                },
+                {
+                    "name": "keyword.operator.new.hwscript",
+                    "match": "\\b(new|delete|typeof|instanceof|in|void)\\b"
+                },
+                {
+                    "name": "constant.language.hwscript",
+                    "match": "\\b(true|false|null|undefined|NaN|Infinity)\\b"
+                },
+                {
+                    "name": "variable.language.hwscript",
+                    "match": "\\b(this|super|arguments)\\b"
+                }
+            ]
         },
-        {
-          "name": "keyword.operator.new.hwscript",
-          "match": "\\b(new|delete|typeof|instanceof|in|void)\\b"
+        "numbers": {
+            "patterns": [
+                {
+                    "name": "constant.numeric.hwscript",
+                    "match": "\\b([0-9]+\\.?[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)?\\b"
+                },
+                {
+                    "name": "constant.numeric.hex.hwscript",
+                    "match": "\\b0[xX][0-9a-fA-F]+\\b"
+                }
+            ]
         },
-        {
-          "name": "constant.language.hwscript",
-          "match": "\\b(true|false|null|undefined|NaN|Infinity)\\b"
+        "operators": {
+            "patterns": [
+                {
+                    "name": "keyword.operator.hwscript",
+                    "match": "(\\+\\+|--|\\+|\\-|\\*|\\/|%|==|!=|===|!==|>|<|>=|<=|&&|\\|\\||!|&|\\||\\^|~|<<|>>|>>>|=|\\+=|-=|\\*=|\\/=|%=|&=|\\|=|\\^=|<<=|>>=|>>>=)"
+                }
+            ]
         },
-        {
-          "name": "variable.language.hwscript",
-          "match": "\\b(this|super|arguments)\\b"
-        }
-      ]
-    },
-    "numbers": {
-      "patterns": [
-        {
-          "name": "constant.numeric.hwscript",
-          "match": "\\b([0-9]+\\.?[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)?\\b"
+        "functions": {
+            "patterns": [
+                {
+                    "name": "entity.name.function.hwscript",
+                    "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()"
+                }
+            ]
         },
-        {
-          "name": "constant.numeric.hex.hwscript",
-          "match": "\\b0[xX][0-9a-fA-F]+\\b"
+        "variables": {
+            "patterns": [
+                {
+                    "name": "variable.other.hwscript",
+                    "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+                }
+            ]
         }
-      ]
-    },
-    "operators": {
-      "patterns": [
-        {
-          "name": "keyword.operator.hwscript",
-          "match": "(\\+\\+|--|\\+|\\-|\\*|\\/|%|==|!=|===|!==|>|<|>=|<=|&&|\\|\\||!|&|\\||\\^|~|<<|>>|>>>|=|\\+=|-=|\\*=|\\/=|%=|&=|\\|=|\\^=|<<=|>>=|>>>=)"
-        }
-      ]
-    },
-    "functions": {
-      "patterns": [
-        {
-          "name": "entity.name.function.hwscript",
-          "match": "\\b([A-Za-z_][A-Za-z0-9_]*)\\s*(?=\\()"
-        }
-      ]
-    },
-    "variables": {
-      "patterns": [
-        {
-          "name": "variable.other.hwscript",
-          "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
-        }
-      ]
     }
-  }
 }
