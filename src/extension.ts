@@ -30,9 +30,6 @@ export async function activate(
     const libWatcher = vscode.workspace.createFileSystemWatcher(
         "**/lib/**/*.{ts,js,csv}"
     );
-    libWatcher.onDidChange(() => cache.loadLibDefinitions());
-    libWatcher.onDidCreate(() => cache.loadLibDefinitions());
-    libWatcher.onDidDelete(() => cache.loadLibDefinitions());
 
     const fileWatcher = vscode.workspace.createFileSystemWatcher(
         "**/*.{hws,hwscript}"

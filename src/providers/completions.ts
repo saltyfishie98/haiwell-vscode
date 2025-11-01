@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { PREDEFINED_OBJECTS, PREDEFINED_VARIABLES } from "../predefined";
+import { BUILTIN_OBJ, BUILTIN_VAR } from "../predefined";
 import { ProjectObjectCache } from "../project_object_cache";
 import { make_type, PropertyInfo, ValueType, VariableInfo } from "../types";
 
@@ -54,7 +54,6 @@ export class HaiwellScriptCompletionProvider
     implements vscode.CompletionItemProvider
 {
     private diagnosticCollection: vscode.DiagnosticCollection;
-    private property_children?: PropertyInfo[];
 
     constructor() {
         this.diagnosticCollection =
@@ -105,7 +104,6 @@ export class HaiwellScriptCompletionProvider
     ): Promise<vscode.CompletionItem[]> {
         const completions: vscode.CompletionItem[] = [];
         const cache = ProjectObjectCache.getInstance();
-        const projectObjects = await cache.getProjectObjects();
         let addedObjects = new Set<string>();
 
         // Collect local variables and functions with scope awareness
@@ -130,12 +128,12 @@ export class HaiwellScriptCompletionProvider
         }
 
         // Predefined objects
-        for (const objectName of Object.keys(PREDEFINED_OBJECTS)) {
+        for (const objectName of Object.keys(BUILTIN_OBJ)) {
             if (addedObjects.has(objectName)) {
                 continue;
             }
 
-            const properties = PREDEFINED_OBJECTS[objectName];
+            const properties = BUILTIN_OBJ[objectName];
             const item = new vscode.CompletionItem(
                 objectName,
                 vscode.CompletionItemKind.Module
@@ -145,9 +143,9 @@ export class HaiwellScriptCompletionProvider
             item.sortText = `${SORT_OBJECT}${objectName}`;
             item.commitCharacters = ["."];
 
-            const propPreview = properties
+            const propPreview = Object.keys(properties)
                 .slice(0, 5)
-                .map((p) => `- ${p.name}`)
+                .map((name) => `- ${name}`)
                 .join("\n")
                 .concat("\n- ...");
 
@@ -162,10 +160,7 @@ export class HaiwellScriptCompletionProvider
             addedObjects.add(objectName);
         }
 
-        addedObjects = new Set([
-            ...addedObjects,
-            ...Object.keys(PREDEFINED_VARIABLES),
-        ]);
+        addedObjects = new Set([...addedObjects, ...Object.keys(BUILTIN_VAR)]);
 
         return completions;
     }
@@ -176,11 +171,10 @@ export class HaiwellScriptCompletionProvider
         const completions: vscode.CompletionItem[] = [];
         const cache = ProjectObjectCache.getInstance();
         const definedObjects = cache.getUserVariables();
-        const projectObjects = await cache.getProjectObjects();
         let addedObjects = new Set<string>();
 
         // Predefined Variables
-        for (const [name, info] of Object.entries(PREDEFINED_VARIABLES)) {
+        for (const [name, info] of Object.entries(BUILTIN_VAR)) {
             const varName = `\$${name.replace(/^_/, "")}`;
 
             if (addedObjects.has(varName)) {
@@ -253,10 +247,7 @@ export class HaiwellScriptCompletionProvider
             addedObjects.add(objectName);
         }
 
-        addedObjects = new Set([
-            ...addedObjects,
-            ...Object.keys(PREDEFINED_VARIABLES),
-        ]);
+        addedObjects = new Set([...addedObjects, ...Object.keys(BUILTIN_VAR)]);
 
         return completions;
     }

@@ -1,19 +1,31 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import {
-    GlobalSymbol,
-    make_type,
-    ObjectUsage,
-    PropertyInfo,
-    VariableDefinition as VariableGroup,
-} from "./types";
-import { PREDEFINED_OBJECTS, PREDEFINED_VARIABLES } from "./predefined";
+import { make_type, PropertyInfo, VariableInfo } from "./types";
+import { BUILTIN_OBJ, BUILTIN_VAR } from "./predefined";
+
+export interface ObjectUsage {
+    files: Set<string>;
+    properties: Set<string>;
+}
+
+export interface VariableGroup {
+    name: string;
+    properties: PropertyInfo[];
+    sourceFile: string;
+}
+
+export interface GlobalSymbol {
+    name: string;
+    kind: "function" | "variable" | "class" | "other";
+    sourceFile: string;
+}
 
 export class ProjectObjectCache {
     private static instance: ProjectObjectCache;
     private objectUsageMap: Map<string, ObjectUsage> = new Map();
     private variable_group: Map<string, VariableGroup> = new Map();
     private globalSymbols: Map<string, GlobalSymbol> = new Map();
+    private builtin_obj_extensions: Map<string, VariableInfo> = new Map();
     private isIndexing: boolean = false;
     private lastIndexTime: number = 0;
     private readonly INDEX_INTERVAL = 2000;
@@ -27,7 +39,7 @@ export class ProjectObjectCache {
 
     async initialize(): Promise<void> {
         await this.loadVariableDefinitions();
-        await this.loadLibDefinitions();
+        // await this.loadLibDefinitions();
         await this.indexProject();
     }
 
@@ -77,111 +89,111 @@ export class ProjectObjectCache {
         }
     }
 
-    async loadLibDefinitions(): Promise<void> {
-        this.globalSymbols.clear();
+    // async loadLibDefinitions(): Promise<void> {
+    //     this.globalSymbols.clear();
 
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders) {
-            return;
-        }
+    //     const workspaceFolders = vscode.workspace.workspaceFolders;
+    //     if (!workspaceFolders) {
+    //         return;
+    //     }
 
-        for (const folder of workspaceFolders) {
-            try {
-                const libFiles = await vscode.workspace.findFiles(
-                    new vscode.RelativePattern(folder, "lib/**/*.{ts,js,csv}"),
-                    null,
-                    1000
-                );
+    //     for (const folder of workspaceFolders) {
+    //         try {
+    //             const libFiles = await vscode.workspace.findFiles(
+    //                 new vscode.RelativePattern(folder, "lib/**/*.{ts,js,csv}"),
+    //                 null,
+    //                 1000
+    //             );
 
-                for (const f of libFiles) {
-                    if (f.fsPath.endsWith(".csv")) {
-                        // CSV files in lib may define variable objects similar to variable/*.csv
-                        await this.parseVariableCSV(f);
-                    } else {
-                        await this.parseLibScriptFile(f);
-                    }
-                }
-            } catch (err) {
-                console.error("Error loading lib definitions:", err);
-            }
-        }
+    //             for (const f of libFiles) {
+    //                 if (f.fsPath.endsWith(".csv")) {
+    //                     // CSV files in lib may define variable objects similar to variable/*.csv
+    //                     await this.parseVariableCSV(f);
+    //                 } else {
+    //                     await this.parseLibScriptFile(f);
+    //                 }
+    //             }
+    //         } catch (err) {
+    //             console.error("Error loading lib definitions:", err);
+    //         }
+    //     }
 
-        console.log(
-            `Loaded ${this.globalSymbols.size} global symbols from lib`
-        );
-    }
+    //     console.log(
+    //         `Loaded ${this.globalSymbols.size} global symbols from lib`
+    //     );
+    // }
 
-    async parseLibScriptFile(fileUri: vscode.Uri): Promise<void> {
-        try {
-            const document = await vscode.workspace.openTextDocument(fileUri);
-            const text = document.getText();
+    // async parseLibScriptFile(fileUri: vscode.Uri): Promise<void> {
+    //     try {
+    //         const document = await vscode.workspace.openTextDocument(fileUri);
+    //         const text = document.getText();
 
-            // // Match ES module named exports: export const/name/function/class X
-            const exportDecl =
-                /export\s+(?:const|let|var|function|class)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g;
-            let m: RegExpExecArray | null;
-            while ((m = exportDecl.exec(text)) !== null) {
-                const name = m[1];
-                const kind = /function/.test(m[0])
-                    ? "function"
-                    : /class/.test(m[0])
-                    ? "class"
-                    : "variable";
-                this.globalSymbols.set(name, {
-                    name,
-                    kind: kind as GlobalSymbol["kind"],
-                    sourceFile: fileUri.fsPath,
-                });
-            }
+    //         // // Match ES module named exports: export const/name/function/class X
+    //         const exportDecl =
+    //             /export\s+(?:const|let|var|function|class)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g;
+    //         let m: RegExpExecArray | null;
+    //         while ((m = exportDecl.exec(text)) !== null) {
+    //             const name = m[1];
+    //             const kind = /function/.test(m[0])
+    //                 ? "function"
+    //                 : /class/.test(m[0])
+    //                 ? "class"
+    //                 : "variable";
+    //             this.globalSymbols.set(name, {
+    //                 name,
+    //                 kind: kind as GlobalSymbol["kind"],
+    //                 sourceFile: fileUri.fsPath,
+    //             });
+    //         }
 
-            // export { a, b as c }
-            const exportList = /export\s*\{([\s\S]*?)\}/g;
-            while ((m = exportList.exec(text)) !== null) {
-                const body = m[1];
-                const parts = body.split(",").map((p) => p.trim());
-                for (const p of parts) {
-                    const name = p.includes(" as ")
-                        ? p.split(" as ")[1].trim()
-                        : p.split(" as ")[0].trim();
-                    if (name) {
-                        this.globalSymbols.set(name, {
-                            name,
-                            kind: "other",
-                            sourceFile: fileUri.fsPath,
-                        });
-                    }
-                }
-            }
+    //         // export { a, b as c }
+    //         const exportList = /export\s*\{([\s\S]*?)\}/g;
+    //         while ((m = exportList.exec(text)) !== null) {
+    //             const body = m[1];
+    //             const parts = body.split(",").map((p) => p.trim());
+    //             for (const p of parts) {
+    //                 const name = p.includes(" as ")
+    //                     ? p.split(" as ")[1].trim()
+    //                     : p.split(" as ")[0].trim();
+    //                 if (name) {
+    //                     this.globalSymbols.set(name, {
+    //                         name,
+    //                         kind: "other",
+    //                         sourceFile: fileUri.fsPath,
+    //                     });
+    //                 }
+    //             }
+    //         }
 
-            // export default function fname() { } or export default class Name {}
-            const exportDefault =
-                /export\s+default\s+(?:function|class)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g;
-            while ((m = exportDefault.exec(text)) !== null) {
-                const name = m[1];
-                if (name) {
-                    this.globalSymbols.set(name, {
-                        name,
-                        kind: /class/.test(m[0]) ? "class" : "function",
-                        sourceFile: fileUri.fsPath,
-                    });
-                }
-            }
+    //         // export default function fname() { } or export default class Name {}
+    //         const exportDefault =
+    //             /export\s+default\s+(?:function|class)\s+([A-Za-z_$][A-Za-z0-9_$]*)/g;
+    //         while ((m = exportDefault.exec(text)) !== null) {
+    //             const name = m[1];
+    //             if (name) {
+    //                 this.globalSymbols.set(name, {
+    //                     name,
+    //                     kind: /class/.test(m[0]) ? "class" : "function",
+    //                     sourceFile: fileUri.fsPath,
+    //                 });
+    //             }
+    //         }
 
-            // CommonJS exports: module.exports.foo = or exports.foo =
-            const cjs =
-                /(?:module\.exports|exports)\.([A-Za-z_$][A-Za-z0-9_$]*)\s*=/g;
-            while ((m = cjs.exec(text)) !== null) {
-                const name = m[1];
-                this.globalSymbols.set(name, {
-                    name,
-                    kind: "variable",
-                    sourceFile: fileUri.fsPath,
-                });
-            }
-        } catch (err) {
-            console.error(`Error parsing lib script ${fileUri.fsPath}:`, err);
-        }
-    }
+    //         // CommonJS exports: module.exports.foo = or exports.foo =
+    //         const cjs =
+    //             /(?:module\.exports|exports)\.([A-Za-z_$][A-Za-z0-9_$]*)\s*=/g;
+    //         while ((m = cjs.exec(text)) !== null) {
+    //             const name = m[1];
+    //             this.globalSymbols.set(name, {
+    //                 name,
+    //                 kind: "variable",
+    //                 sourceFile: fileUri.fsPath,
+    //             });
+    //         }
+    //     } catch (err) {
+    //         console.error(`Error parsing lib script ${fileUri.fsPath}:`, err);
+    //     }
+    // }
 
     getGlobalSymbols(): GlobalSymbol[] {
         return Array.from(this.globalSymbols.values());
@@ -386,8 +398,8 @@ export class ProjectObjectCache {
     isObjectDefined(objectName: string): boolean {
         return (
             this.variable_group.has(objectName) ||
-            PREDEFINED_OBJECTS.hasOwnProperty(objectName) ||
-            PREDEFINED_VARIABLES.hasOwnProperty(objectName)
+            BUILTIN_OBJ.hasOwnProperty(objectName) ||
+            BUILTIN_VAR.hasOwnProperty(objectName)
         );
     }
 
@@ -397,32 +409,43 @@ export class ProjectObjectCache {
             return definition.properties;
         }
 
-        const predefined = PREDEFINED_OBJECTS[objectName];
+        const predefined = Object.entries(BUILTIN_OBJ[objectName]).map(
+            ([k, v]): PropertyInfo => {
+                return {
+                    name: k,
+                    type: v.type,
+                    description: v.description,
+                    rawType: v.rawType,
+                    sourceLine: v.sourceLine,
+                };
+            }
+        );
+
         if (predefined) {
             return predefined;
         }
 
-        const usage = this.objectUsageMap.get(objectName);
-        if (usage && usage.properties.size > 0) {
-            return Array.from(usage.properties).map((name) => ({
-                name,
-                type: make_type.Any(),
-            }));
-        }
+        // const usage = this.objectUsageMap.get(objectName);
+        // if (usage && usage.properties.size > 0) {
+        //     return Array.from(usage.properties).map((name) => ({
+        //         name,
+        //         type: make_type.Any(),
+        //     }));
+        // }
 
         return [];
     }
 
-    async getProjectObjects(): Promise<Map<string, ObjectUsage>> {
-        const now = Date.now();
-        if (
-            now - this.lastIndexTime > this.INDEX_INTERVAL &&
-            !this.isIndexing
-        ) {
-            await this.indexProject();
-        }
-        return this.objectUsageMap;
-    }
+    // async getProjectObjects(): Promise<Map<string, ObjectUsage>> {
+    //     const now = Date.now();
+    //     if (
+    //         now - this.lastIndexTime > this.INDEX_INTERVAL &&
+    //         !this.isIndexing
+    //     ) {
+    //         await this.indexProject();
+    //     }
+    //     return this.objectUsageMap;
+    // }
 
     async indexProject(): Promise<void> {
         if (this.isIndexing) {

@@ -47,12 +47,21 @@ function publish_details(start_time, unique_id, sku) {
 	$Publish.details_event_queued = true;
 }
 
-
+const test_1 = {
+	foo: 1,
+	bar: {
+		baz: 2,
+	}
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-if (!$System.initialized) { return; }
 var start_time = $System.timestamp;
+
+if (!$System.initialized) { 
+	var start_time = 1;	
+	return; 
+}
 
 $Process.batch_start_datetime_str = $Date + " " + timestamp_to_datetime(parseInt(start_time));
 $Process.batch_start_time = start_time;
