@@ -46,7 +46,7 @@ export class HaiwellScriptCompletionProvider
             .lineAt(position)
             .text.substring(0, position.character);
 
-        const dot = linePrefix.match(/((\w+)\.)+$/);
+        const dot = linePrefix.match(/((\w+)\.)+/);
         if (dot) {
             const objectName = dot[0].split(".").filter((s) => s !== "");
             const items = await this.getPropertyCompletions(

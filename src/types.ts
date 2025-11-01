@@ -2,6 +2,8 @@
  * Type definitions for Haiwell Script Extension
  */
 
+import { MarkdownString } from "vscode";
+
 type TypeId =
     | "String"
     | "Number"
@@ -11,18 +13,45 @@ type TypeId =
     | "Any"
     | "Unknown";
 
-export type FunctionParam = { name: string; type: string };
+export type TypeMetadata = {
+    location?: string;
+    description?: string;
+};
 
-export type StringType = { id: "String"; value_len?: number };
-export type NumberType = { id: "Number" };
-export type FunctionType = { id: "Function"; params?: FunctionParam[] };
-export type BooleanType = { id: "Boolean" };
-export type AnyType = { id: "Any" };
-export type UnknownType = { id: "Unknown"; str?: string };
+export type FunctionParam = {
+    name: string;
+    type: string;
+    metadata?: TypeMetadata;
+};
+
+export type StringType = {
+    id: "String";
+    value_len?: number;
+    metadata?: TypeMetadata;
+};
+
+export type NumberType = { id: "Number"; metadata?: TypeMetadata };
+
+export type FunctionType = {
+    id: "Function";
+    params?: FunctionParam[];
+    metadata?: TypeMetadata;
+};
+
+export type BooleanType = { id: "Boolean"; metadata?: TypeMetadata };
+
+export type AnyType = { id: "Any"; metadata?: TypeMetadata };
+
+export type UnknownType = {
+    id: "Unknown";
+    str?: string;
+    metadata?: TypeMetadata;
+};
 
 export type ObjectType = {
     id: "Object";
-    child?: { name: string; type: ValueType }[];
+    child?: PropertyInfo[];
+    metadata?: TypeMetadata;
 };
 
 export type ValueType =
@@ -41,25 +70,30 @@ function id_type(id: TypeId): ValueType {
 }
 
 export const make_type = {
-    Number: (): ValueType => id_type("String"),
-    Boolean: (): ValueType => id_type("Boolean"),
-    Any: (): ValueType => id_type("Any"),
+    Number: (metadata?: TypeMetadata): ValueType => id_type("String"),
+    Boolean: (metadata?: TypeMetadata): ValueType => id_type("Boolean"),
+    Any: (metadata?: TypeMetadata): ValueType => id_type("Any"),
 
-    Unknown: (str?: string): ValueType => {
+    Unknown: (str?: string, metadata?: TypeMetadata): ValueType => {
         return {
             id: "Unknown",
             str: str,
+            metadata: metadata,
         };
     },
 
-    String: (length?: number): ValueType => {
+    String: (length?: number, metadata?: TypeMetadata): ValueType => {
         return {
             id: "String",
             value_len: length,
+            metadata: metadata,
         };
     },
 
-    Object: (child: { [key: string]: ValueType }): ValueType => {
+    Object: (
+        child: { [key: string]: ValueType },
+        metadata?: TypeMetadata
+    ): ValueType => {
         const out = Object.entries(child).map(([k, v]) => {
             return {
                 name: k,
@@ -70,10 +104,15 @@ export const make_type = {
         return {
             id: "Object",
             child: out,
+            metadata: metadata,
         };
     },
 
-    Function: (...params: string[]): ValueType => {
+    Function: (params?: string[], metadata?: TypeMetadata): ValueType => {
+        if (params === undefined || params.length === 0) {
+            return { id: "Function", metadata: metadata };
+        }
+
         const p = params.map((p): FunctionParam => {
             let [n, t] = p.split(":");
             t = typeof t === "undefined" ? "any" : t.trim();
@@ -88,6 +127,7 @@ export const make_type = {
         return {
             id: "Function",
             params: p,
+            metadata: metadata,
         };
     },
 };

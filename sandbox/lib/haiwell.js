@@ -1,6 +1,114 @@
 /* eslint-disable */
 
 export const Common = {
+    freeProtocol: {
+        write: function backendOnly() {
+            console.log("backend only function");
+        },
+        readSpecificLength: function backendOnly() {
+            console.log("backend only function");
+        },
+        readLastMillisecond: function backendOnly() {
+            console.log("backend only function");
+        },
+    },
+    memory: {
+        alloc: function backendOnly() {
+            console.log("backend only function");
+        },
+        concat: function backendOnly() {
+            console.log("backend only function");
+        },
+        fromUTF8: function backendOnly() {
+            console.log("backend only function");
+        },
+        crc16Modulebus: function backendOnly() {
+            console.log("backend only function");
+        },
+    },
+    database: {
+        createDatabase: function backendOnly() {
+            console.log("backend only function");
+        },
+        deleteDatabase: function backendOnly() {
+            console.log("backend only function");
+        },
+        flush: function backendOnly() {
+            console.log("backend only function");
+        },
+        getDatabaseFiles: function backendOnly() {
+            console.log("backend only function");
+        },
+        exec: function backendOnly() {
+            console.log("backend only function");
+        },
+        execTransaction: function backendOnly() {
+            console.log("backend only function");
+        },
+        get: function backendOnly() {
+            console.log("backend only function");
+        },
+        query: function backendOnly() {
+            console.log("backend only function");
+        },
+    },
+    logger: {
+        log: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+        debug: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+        info: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+        trace: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+        warn: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+        note: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+        error: function (fmt) {
+            var args = Array.prototype.slice.call(arguments, 1);
+            socket.emit("client.fgLog", lv, fmt, args);
+        },
+    },
+    crypto: {
+        createHash: function backendOnly() {
+            console.log("backend only function");
+        },
+        createHmac: function backendOnly() {
+            console.log("backend only function");
+        },
+        createCipher: function backendOnly() {
+            console.log("backend only function");
+        },
+        createDecipher: function backendOnly() {
+            console.log("backend only function");
+        },
+        createCipheriv: function backendOnly() {
+            console.log("backend only function");
+        },
+        createDecipheriv: function backendOnly() {
+            console.log("backend only function");
+        },
+        createSign: function backendOnly() {
+            console.log("backend only function");
+        },
+        createVerify: function backendOnly() {
+            console.log("backend only function");
+        },
+    },
+
     MobileBarcodescanner: function () {
         console.log("执行脚本");
         //执行app扫码枪
@@ -307,7 +415,6 @@ export const Common = {
     SystemSetting: function () {
         setting();
     },
-    SendKey: function (keyCode) {},
     testEnd: function () {
         alert("老化工程结束！");
         if (window.MainPage) MainPage.testEnd();
@@ -492,7 +599,6 @@ export const Common = {
         }
         return val;
     },
-    AddFile: function (fileName, filePath) {},
     uint8Array2uint16Array: function (uint8Array) {
         var uint16Array = new Uint16Array(uint8Array.length / 2);
         for (var i = 0; i < uint8Array.length; i += 2) {
@@ -515,10 +621,7 @@ export const Common = {
     gbkToUtf8: function (gbkBuffer) {
         console.log("仅支持后台运行");
     },
-    ReadFile: function (filePath) {},
-    WriteFile: function (filePath, data) {},
-    RenameFile: function (oldName, newName, filePath) {},
-    DeleteFile: function (filePath) {},
+
     BoolToInt: function (bool) {
         if (true === bool) {
             return 1;
@@ -541,43 +644,12 @@ export const Common = {
         }
         return x & y;
     },
-    BufferCreate: function (zoneCode, zoneLen) {},
-    BufferGetAt: function (zoneCode, zoneLen) {},
-    BufferSetAt: function (zoneCode, zoneLen, data) {},
-    BufferStoreToFile: function (zoneCode, fileName, callback) {},
-    BufferLoadFromFile: function (zoneCode, fileName, callback) {},
-    DelDataGroup: function (callback, options) {},
-    DelAlertRecord: function (callback, options) {},
-    DelHistoryRecord: function (callback, options) {},
-    CreateOrOpenDatabase: function (type, databasePath, cb) {},
-    CloseDatabase: function (type, databasePath, cb) {},
-    DeleteDatabase: function (type, databasePath, cb) {},
-    CopyDatabase: function (
-        sourceType,
-        sourceDatabasePath,
-        targetType,
-        targetDatabasePath,
-        cb
-    ) {},
-    QueryDatabase: function (type, databasePath, sql, sucCallback, cb) {},
-    TraQueryDatabase: function (curDataBase, sql, sucCallback, callback) {},
-    RunDatabase: function (type, databasePath, sql, sucCallback, cb) {},
-    TraRunDatabase: function (curDataBase, sql, sucCallback, callback) {},
-    ExecDatabase: function (type, databasePath, sqlMore, sucCallback, cb) {},
-    TraExecDatabase: function (curDataBase, sql, sucCallback, callback) {},
-    TraStaDatabase: function (curDataBase) {},
-    CommitDatabase: function (curDataBase) {},
-    RollBackDatabase: function (curDataBase) {},
-    TarnRunDatabase: function (type, databasePath, callback) {},
     BackTask: function (id, element) {
         Window.getOperationInfo(element, function (info) {
             Window.logOperationInfo(info);
             socket.emit("carryOutTheTask", id);
         });
     },
-    GetRecipeGroupNum: function (options, callback) {},
-    AddRecipeGroup: function (options, callback) {},
-    DeleteRecipeGroup: function (options, callback) {},
     RecipeToPlcByGroupNo: function (options, callback) {
         var params = {
             taskName: arguments.callee.name,
@@ -675,122 +747,54 @@ export const Common = {
         };
         socket.emit("super.task-run", params);
     },
-    PrintText: function (name, text) {},
-    PrintLine: function (name, arr) {},
-    freeProtocol: {
-        write: function backendOnly() {
-            console.log("backend only function");
-        },
-        readSpecificLength: function backendOnly() {
-            console.log("backend only function");
-        },
-        readLastMillisecond: function backendOnly() {
-            console.log("backend only function");
-        },
-    },
-    memory: {
-        alloc: function backendOnly() {
-            console.log("backend only function");
-        },
-        concat: function backendOnly() {
-            console.log("backend only function");
-        },
-        fromUTF8: function backendOnly() {
-            console.log("backend only function");
-        },
-        crc16Modulebus: function backendOnly() {
-            console.log("backend only function");
-        },
-    },
-    database: {
-        createDatabase: function backendOnly() {
-            console.log("backend only function");
-        },
-        deleteDatabase: function backendOnly() {
-            console.log("backend only function");
-        },
-        flush: function backendOnly() {
-            console.log("backend only function");
-        },
-        getDatabaseFiles: function backendOnly() {
-            console.log("backend only function");
-        },
-        exec: function backendOnly() {
-            console.log("backend only function");
-        },
-        execTransaction: function backendOnly() {
-            console.log("backend only function");
-        },
-        get: function backendOnly() {
-            console.log("backend only function");
-        },
-        query: function backendOnly() {
-            console.log("backend only function");
-        },
-    },
-    logger: {
-        log: function (fmt) {
-            var args = Array.prototype.slice.call(arguments, 1);
-            socket.emit("client.fgLog", lv, fmt, args);
-        },
-        debug: function (fmt) {
-            var args = Array.prototype.slice.call(arguments, 1);
-            socket.emit("client.fgLog", lv, fmt, args);
-        },
-        info: function (fmt) {
-            var args = Array.prototype.slice.call(arguments, 1);
-            socket.emit("client.fgLog", lv, fmt, args);
-        },
-        trace: function (fmt) {
-            var args = Array.prototype.slice.call(arguments, 1);
-            socket.emit("client.fgLog", lv, fmt, args);
-        },
-        warn: function (fmt) {
-            var args = Array.prototype.slice.call(arguments, 1);
-            socket.emit("client.fgLog", lv, fmt, args);
-        },
-        note: function (fmt) {
-            var args = Array.prototype.slice.call(arguments, 1);
-            socket.emit("client.fgLog", lv, fmt, args);
-        },
-        error: function (fmt) {
-            var args = Array.prototype.slice.call(arguments, 1);
-            socket.emit("client.fgLog", lv, fmt, args);
-        },
-    },
-    crypto: {
-        createHash: function backendOnly() {
-            console.log("backend only function");
-        },
-        createHmac: function backendOnly() {
-            console.log("backend only function");
-        },
-        createCipher: function backendOnly() {
-            console.log("backend only function");
-        },
-        createDecipher: function backendOnly() {
-            console.log("backend only function");
-        },
-        createCipheriv: function backendOnly() {
-            console.log("backend only function");
-        },
-        createDecipheriv: function backendOnly() {
-            console.log("backend only function");
-        },
-        createSign: function backendOnly() {
-            console.log("backend only function");
-        },
-        createVerify: function backendOnly() {
-            console.log("backend only function");
-        },
-    },
-    getConnected: function () {},
-    publish: function (topic, message, opts, callback) {},
+
     graphicAudioPlay: function (element, stage) {
         hailib.define(["audio"], function (audioModule) {
             audioModule.playAudio(element, stage);
         });
     },
+
+    SendKey: function (keyCode) {},
+    AddFile: function (fileName, filePath) {},
+    ReadFile: function (filePath) {},
+    WriteFile: function (filePath, data) {},
+    RenameFile: function (oldName, newName, filePath) {},
+    DeleteFile: function (filePath) {},
+    GetRecipeGroupNum: function (options, callback) {},
+    AddRecipeGroup: function (options, callback) {},
+    DeleteRecipeGroup: function (options, callback) {},
+    PrintText: function (name, text) {},
+    PrintLine: function (name, arr) {},
+    getConnected: function () {},
+    publish: function (topic, message, opts, callback) {},
+    BufferCreate: function (zoneCode, zoneLen) {},
+    BufferGetAt: function (zoneCode, zoneLen) {},
+    BufferSetAt: function (zoneCode, zoneLen, data) {},
+    BufferStoreToFile: function (zoneCode, fileName, callback) {},
+    BufferLoadFromFile: function (zoneCode, fileName, callback) {},
+    DelDataGroup: function (callback, options) {},
+    DelAlertRecord: function (callback, options) {},
+    DelHistoryRecord: function (callback, options) {},
+    CreateOrOpenDatabase: function (type, databasePath, cb) {},
+    CloseDatabase: function (type, databasePath, cb) {},
+    DeleteDatabase: function (type, databasePath, cb) {},
+    QueryDatabase: function (type, databasePath, sql, sucCallback, cb) {},
+    TraQueryDatabase: function (curDataBase, sql, sucCallback, callback) {},
+    RunDatabase: function (type, databasePath, sql, sucCallback, cb) {},
+    TraRunDatabase: function (curDataBase, sql, sucCallback, callback) {},
+    ExecDatabase: function (type, databasePath, sqlMore, sucCallback, cb) {},
+    TraExecDatabase: function (curDataBase, sql, sucCallback, callback) {},
+    TraStaDatabase: function (curDataBase) {},
+    CommitDatabase: function (curDataBase) {},
+    RollBackDatabase: function (curDataBase) {},
+    TarnRunDatabase: function (type, databasePath, callback) {},
+    CopyDatabase: function (
+        sourceType,
+        sourceDatabasePath,
+        targetType,
+        targetDatabasePath,
+        cb
+    ) {},
 };
 
 export const Window = {
@@ -2149,7 +2153,6 @@ export const Window = {
             hai.DeviceModal(options);
         });
     },
-    Clipboard: function (type, options) {},
     PopModalById: function (id, options) {
         var packId = "modal" + id;
         options = options || {};
@@ -2499,7 +2502,6 @@ export const Window = {
         }
         return res;
     },
-    historyTableExport: function () {},
     ShowWindowById: function (number, subLocation, isSystemWinNoChanged) {
         // 判断画面id，name，no互转表是否存在
         if (!FrameIdToNameToNoDB) {
@@ -2528,6 +2530,9 @@ export const Window = {
             this.HideById(FrameIdToNameToNoDB.ID[index]);
         }
     },
+
+    Clipboard: function (type, options) {},
+    historyTableExport: function () {},
 };
 
 export const Device = {

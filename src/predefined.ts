@@ -4,30 +4,678 @@ export const PREDEFINED_OBJECTS: {
     [key: string]: PropertyInfo[];
 } = {
     Common: [
-        { name: "MobileBarcodescanner", type: make_type.Function() },
         {
-            name: "Format",
-            type: make_type.Function("num: number", "type_str: string"),
+            name: "freeProtocol",
+            type: make_type.Object({
+                write: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                readSpecificLength: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                readLastMillisecond: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+            }),
+        },
+        {
+            name: "memory",
+            type: make_type.Object({
+                alloc: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                concat: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                fromUTF8: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                crc16Modulebus: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+            }),
+        },
+        {
+            name: "database",
+            type: make_type.Object({
+                createDatabase: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                deleteDatabase: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                flush: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                getDatabaseFiles: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                exec: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                execTransaction: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                get: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                query: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+            }),
         },
         {
             name: "logger",
             type: make_type.Object({
-                log: make_type.Function("fmt: string"),
-                debug: make_type.Function("fmt: string"),
-                info: make_type.Function("fmt: string"),
-                trace: make_type.Function("fmt: string"),
-                warn: make_type.Function("fmt: string"),
-                error: make_type.Function("fmt: string"),
-                note: make_type.Function("fmt: string"),
+                log: make_type.Function(["fmt: string"]),
+                debug: make_type.Function(["fmt: string"]),
+                info: make_type.Function(["fmt: string"]),
+                trace: make_type.Function(["fmt: string"]),
+                warn: make_type.Function(["fmt: string"]),
+                error: make_type.Function(["fmt: string"]),
+                note: make_type.Function(["fmt: string"]),
+            }),
+        },
+        {
+            name: "crypto",
+            type: make_type.Object({
+                createHash: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                createHmac: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                createCipher: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                createDecipher: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                createCipheriv: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                createDecipheriv: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                createSign: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+                createVerify: make_type.Function([], {
+                    description: "**NOTE**: backend only",
+                }),
+            }),
+        },
+
+        { name: "MobileBarcodescanner", type: make_type.Function() },
+        {
+            name: "Format",
+            type: make_type.Function(["num: number", "type_str: string"]),
+        },
+
+        { name: "ConvertToBase", type: make_type.Function(["value", "radix"]) },
+        {
+            name: "ConvertFromBase",
+            type: make_type.Function(["value", "radix"]),
+        },
+        { name: "Local", type: make_type.Function() },
+        { name: "SetTimeout", type: make_type.Function(["callback", "times"]) },
+        {
+            name: "SetInterval",
+            type: make_type.Function(["callback", "times"]),
+        },
+        { name: "Log", type: make_type.Function(["content"]) },
+        {
+            name: "Beep",
+            type: make_type.Function(["myOnTime", "myOffTime", "myRepeat"]),
+        },
+        { name: "BeepStart", type: make_type.Function() },
+        { name: "BeepEnd", type: make_type.Function() },
+        { name: "PausePlayback", type: make_type.Function() },
+        { name: "RTCurveCtrl", type: make_type.Function(["state"]) },
+        { name: "LoadBarLib", type: make_type.Function() },
+        { name: "ShowBarCode", type: make_type.Function(["eleId", "content"]) },
+        { name: "sysPrint", type: make_type.Function(["element"]) },
+        { name: "sysReboot", type: make_type.Function(["element"]) },
+        {
+            name: "SocketSend",
+            type: make_type.Function(["options", "element"]),
+        },
+        {
+            name: "SocketSendWithOpLog",
+            type: make_type.Function(["options", "element"]),
+        },
+        { name: "GetSend", type: make_type.Function(["options", "url"]) },
+        { name: "Ajax", type: make_type.Function(["options"]) },
+        {
+            name: "execChange",
+            type: make_type.Function([
+                "commumType",
+                "winId",
+                "eleIds",
+                "options",
+            ]),
+        },
+        { name: "IntoNetwork", type: make_type.Function() },
+        { name: "Setting", type: make_type.Function() },
+        { name: "SystemSetting", type: make_type.Function() },
+        { name: "testEnd", type: make_type.Function() },
+        { name: "CalcColor", type: make_type.Function(["color", "level"]) },
+        {
+            name: "ConfirmBox",
+            type: make_type.Function(["confirmText", "options"]),
+        },
+        { name: "CloudInfoBox", type: make_type.Function(["type", "options"]) },
+        { name: "GetAlarm", type: make_type.Function(["alarmFormat"]) },
+        { name: "RST", type: make_type.Function(["value", "index"]) },
+        { name: "INV", type: make_type.Function(["value", "index"]) },
+        { name: "SET", type: make_type.Function(["value", "index"]) },
+        { name: "MsgBox", type: make_type.Function(["content", "options"]) },
+        { name: "Quit", type: make_type.Function(["element"]) },
+        { name: "Bee", type: make_type.Function() },
+        {
+            name: "controlCameraDown",
+            type: make_type.Function(["camid", "direction", "symId"]),
+        },
+        {
+            name: "controlCameraUp",
+            type: make_type.Function(["camid", "direction", "symId"]),
+        },
+        {
+            name: "cameraSnapshot",
+            type: make_type.Function(["camid", "symId"]),
+        },
+        { name: "CloseModal", type: make_type.Function(["ID", "symId"]) },
+        { name: "GetBit", type: make_type.Function(["val", "index"]) },
+        { name: "GetBits", type: make_type.Function(["val"]) },
+        { name: "ArrayToValue", type: make_type.Function(["bits"]) },
+        {
+            name: "uint8Array2uint16Array",
+            type: make_type.Function(["uint8Array"]),
+        },
+        {
+            name: "uint16Array2uint8Array",
+            type: make_type.Function(["uint16Array"]),
+        },
+        { name: "utf8ToGbk", type: make_type.Function(["utf8Str"]) },
+        { name: "gbkToUtf8", type: make_type.Function(["gbkBuffer"]) },
+        { name: "BoolToInt", type: make_type.Function(["bool"]) },
+        { name: "IntToBool", type: make_type.Function(["int"]) },
+        { name: "BitAnd", type: make_type.Function(["x", "y"]) },
+        { name: "BackTask", type: make_type.Function(["id", "element"]) },
+        {
+            name: "RecipeToPlcByGroupNo",
+            type: make_type.Function(["options", "callback"]),
+        },
+        {
+            name: "RecipePlcSaveByGroupNo",
+            type: make_type.Function(["options", "callback"]),
+        },
+        {
+            name: "RecipeToPlcByGroupName",
+            type: make_type.Function(["options", "callback"]),
+        },
+        {
+            name: "RecipePlcSaveByGroupName",
+            type: make_type.Function(["options", "callback"]),
+        },
+        {
+            name: "historyRecordCsv",
+            type: make_type.Function(["query", "callback"]),
+        },
+        {
+            name: "recipeRecordCsv",
+            type: make_type.Function(["query", "callback"]),
+        },
+        {
+            name: "alarmRecordCsv",
+            type: make_type.Function(["query", "callback"]),
+        },
+        {
+            name: "graphicAudioPlay",
+            type: make_type.Function(["element", "stage"]),
+        },
+        {
+            name: "SendKey",
+            type: make_type.Function(["keyCode"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "AddFile",
+            type: make_type.Function(["fileName", "filePath"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "ReadFile",
+            type: make_type.Function(["filePath"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "WriteFile",
+            type: make_type.Function(["filePath", "data"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "RenameFile",
+            type: make_type.Function(["oldName", "newName", "filePath"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "DeleteFile",
+            type: make_type.Function(["filePath"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "GetRecipeGroupNum",
+            type: make_type.Function(["options", "callback"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "AddRecipeGroup",
+            type: make_type.Function(["options", "callback"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "DeleteRecipeGroup",
+            type: make_type.Function(["options", "callback"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "PrintText",
+            type: make_type.Function(["name", "text"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "PrintLine",
+            type: make_type.Function(["name", "arr"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "getConnected",
+            type: make_type.Function([], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "publish",
+            type: make_type.Function(["topic", "message", "opts", "callback"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "BufferCreate",
+            type: make_type.Function(["zoneCode", "zoneLen"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "BufferGetAt",
+            type: make_type.Function(["zoneCode", "zoneLen"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "BufferSetAt",
+            type: make_type.Function(["zoneCode", "zoneLen", "data"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "BufferStoreToFile",
+            type: make_type.Function(["zoneCode", "fileName", "callback"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "BufferLoadFromFile",
+            type: make_type.Function(["zoneCode", "fileName", "callback"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "DelDataGroup",
+            type: make_type.Function(["callback", "options"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "DelAlertRecord",
+            type: make_type.Function(["callback", "options"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "DelHistoryRecord",
+            type: make_type.Function(["callback", "options"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "CreateOrOpenDatabase",
+            type: make_type.Function(["type", "databasePath", "cb"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "CloseDatabase",
+            type: make_type.Function(["type", "databasePath", "cb"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "DeleteDatabase",
+            type: make_type.Function(["type", "databasePath", "cb"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "QueryDatabase",
+            type: make_type.Function(
+                ["type", "databasePath", "sql", "sucCallback", "cb"],
+                { description: "**NOTE**: empty definition" }
+            ),
+        },
+        {
+            name: "TraQueryDatabase",
+            type: make_type.Function(
+                ["curDataBase", "sql", "sucCallback", "callback"],
+                { description: "**NOTE**: empty definition" }
+            ),
+        },
+        {
+            name: "RunDatabase",
+            type: make_type.Function(
+                ["type", "databasePath", "sql", "sucCallback", "cb"],
+                { description: "**NOTE**: empty definition" }
+            ),
+        },
+        {
+            name: "TraRunDatabase",
+            type: make_type.Function(
+                ["curDataBase", "sql", "sucCallback", "callback"],
+                { description: "**NOTE**: empty definition" }
+            ),
+        },
+        {
+            name: "ExecDatabase",
+            type: make_type.Function(
+                ["type", "databasePath", "sqlMore", "sucCallback", "cb"],
+                { description: "**NOTE**: empty definition" }
+            ),
+        },
+        {
+            name: "TraExecDatabase",
+            type: make_type.Function(
+                ["curDataBase", "sql", "sucCallback", "callback"],
+                { description: "**NOTE**: empty definition" }
+            ),
+        },
+        {
+            name: "TraStaDatabase",
+            type: make_type.Function(["curDataBase"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "CommitDatabase",
+            type: make_type.Function(["curDataBase"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "RollBackDatabase",
+            type: make_type.Function(["curDataBase"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "TarnRunDatabase",
+            type: make_type.Function(["type", "databasePath", "callback"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "CopyDatabase",
+            type: make_type.Function(
+                [
+                    "sourceType",
+                    "sourceDatabasePath",
+                    "targetType",
+                    "targetDatabasePath",
+                    "cb",
+                ],
+                { description: "**NOTE**: empty definition" }
+            ),
+        },
+    ],
+    Window: [
+        { name: "AppScanCode", type: make_type.Function() },
+        { name: "WebIframe", type: make_type.Function(["root", "option"]) },
+        { name: "UpdateFile", type: make_type.Function(["options"]) },
+        {
+            name: "TimeInputSet",
+            type: make_type.Function(["options", "callback"]),
+        },
+        { name: "logOperationInfo", type: make_type.Function(["info"]) },
+        {
+            name: "getOperationInfo",
+            type: make_type.Function(["element", "callback"]),
+        },
+        { name: "operationLog", type: make_type.Function(["container"]) },
+        { name: "FileList", type: make_type.Function(["root", "option"]) },
+        {
+            name: "BarChart",
+            type: make_type.Function(["type", "root", "option"]),
+        },
+        { name: "XyCurve", type: make_type.Function(["root", "option"]) },
+        { name: "PrintPic", type: make_type.Function(["option"]) },
+        { name: "PDFPel", type: make_type.Function(["options"]) },
+        {
+            name: "RealTimeCurve",
+            type: make_type.Function(["root", "option", "curve"]),
+        },
+        { name: "HistoryCurve", type: make_type.Function(["res", "option"]) },
+        { name: "getLang", type: make_type.Function(["value"]) },
+        { name: "userGroupEdit", type: make_type.Function(["element"]) },
+        { name: "DataList", type: make_type.Function(["options"]) },
+        { name: "GetCurrentFrameId", type: make_type.Function() },
+        {
+            name: "ExportData",
+            type: make_type.Function([
+                "type",
+                "position",
+                "filePath",
+                "fileFormat",
+                "element",
+            ]),
+        },
+        { name: "sendActivityFrame", type: make_type.Function() },
+        { name: "Weather", type: make_type.Function(["options"]) },
+        { name: "getSysLang", type: make_type.Function() },
+        { name: "QRCode", type: make_type.Function(["callback"]) },
+        { name: "GetSysTime", type: make_type.Function() },
+        { name: "GetSysTimeDate", type: make_type.Function() },
+        {
+            name: "TimeSelect",
+            type: make_type.Function(["options", "callback"]),
+        },
+        { name: "TimeSet", type: make_type.Function(["options", "callback"]) },
+        {
+            name: "Select",
+            type: make_type.Function(["options", "callback", "element"]),
+        },
+        { name: "Table", type: make_type.Function(["options"]) },
+        { name: "RecipeGroup", type: make_type.Function(["options"]) },
+        { name: "RecipeEditTableBox", type: make_type.Function(["options"]) },
+        { name: "RecipeEditRowClass", type: make_type.Function(["options"]) },
+        { name: "Search", type: make_type.Function(["options"]) },
+        { name: "Loading", type: make_type.Function(["options"]) },
+        { name: "Notification", type: make_type.Function(["options"]) },
+        { name: "GoToUrl", type: make_type.Function(["url"]) },
+        {
+            name: "CameraFrame",
+            type: make_type.Function(["options", "element"]),
+        },
+        {
+            name: "CameraWebRTC",
+            type: make_type.Function(["options", "currentElement"]),
+        },
+        { name: "getStorageCamera", type: make_type.Function(["symId"]) },
+        {
+            name: "setStorageCamera",
+            type: make_type.Function(["DeviceSerial", "info"]),
+        },
+        {
+            name: "ShowById",
+            type: make_type.Function([
+                "id",
+                "subLocation",
+                "isSystemWinNoChanged",
+                "isLocalOnload",
+            ]),
+        },
+        { name: "ShowScreenSaverById", type: make_type.Function(["id"]) },
+        { name: "HideById", type: make_type.Function(["id"]) },
+        { name: "Show", type: make_type.Function(["name", "element"]) },
+        {
+            name: "ShowByNo",
+            type: make_type.Function([
+                "number",
+                "subLocation",
+                "isSystemWinNoChanged",
+            ]),
+        },
+        { name: "HideByNo", type: make_type.Function(["number"]) },
+        { name: "ClearData", type: make_type.Function(["type", "element"]) },
+        { name: "PopClose", type: make_type.Function(["element"]) },
+        {
+            name: "ShowSymbol",
+            type: make_type.Function(["winName", "symbolName"]),
+        },
+        {
+            name: "HideSymbol",
+            type: make_type.Function(["winName", "symbolName"]),
+        },
+        { name: "ShowElement", type: make_type.Function(["winId", "symId"]) },
+        { name: "HideElement", type: make_type.Function(["winId", "symId"]) },
+        { name: "ShowPaymentInfo", type: make_type.Function(["element"]) },
+        { name: "Login", type: make_type.Function(["element"]) },
+        {
+            name: "LoginModal",
+            type: make_type.Function(["usernames", "options"]),
+        },
+        {
+            name: "DialogBox",
+            type: make_type.Function(["usernames", "options"]),
+        },
+        { name: "Logout", type: make_type.Function(["element"]) },
+        {
+            name: "ShowSubByNo",
+            type: make_type.Function(["currentElement", "No"]),
+        },
+        {
+            name: "ShowSubById",
+            type: make_type.Function(["currentElement", "Id"]),
+        },
+        { name: "HideSub", type: make_type.Function(["currentElement"]) },
+        {
+            name: "PopSubById",
+            type: make_type.Function(["id", "options", "x", "y", "hashBoard"]),
+        },
+        {
+            name: "PopSubByNo",
+            type: make_type.Function(["No", "options", "x", "y"]),
+        },
+        {
+            name: "Toast",
+            type: make_type.Function(["context", "mill", "options"]),
+        },
+        {
+            name: "Popupbox",
+            type: make_type.Function(["context", "mill", "options"]),
+        },
+        { name: "PayModal", type: make_type.Function(["options"]) },
+        { name: "CloseModal", type: make_type.Function(["ID", "symId"]) },
+        {
+            name: "CloseModalByElement",
+            type: make_type.Function(["classModal"]),
+        },
+        { name: "CloseAlarmModalElement", type: make_type.Function(["el"]) },
+        { name: "updataAlertModeLang", type: make_type.Function() },
+        {
+            name: "TestModal",
+            type: make_type.Function(["context", "mill", "options"]),
+        },
+        { name: "createStyleSheet", type: make_type.Function() },
+        { name: "Ezuikit", type: make_type.Function(["callback"]) },
+        {
+            name: "Highcharts",
+            type: make_type.Function(["options", "chartOpt"]),
+        },
+        { name: "FileModal", type: make_type.Function(["options"]) },
+        { name: "DeviceModal", type: make_type.Function(["options"]) },
+        { name: "PopModalById", type: make_type.Function(["id", "options"]) },
+        {
+            name: "PopKeyboard",
+            type: make_type.Function(["type", "callback", "options"]),
+        },
+        { name: "onloadWindow", type: make_type.Function(["winId", "eleIds"]) },
+        { name: "onShowWindow", type: make_type.Function(["winId", "eleIds"]) },
+        { name: "onHideWindow", type: make_type.Function(["winId", "eleIds"]) },
+        { name: "ShowFirstWindow", type: make_type.Function(["element"]) },
+        { name: "ShowLastWindow", type: make_type.Function(["element"]) },
+        { name: "ShowNextWindow", type: make_type.Function(["element"]) },
+        { name: "ShowPreviousWindow", type: make_type.Function(["element"]) },
+        { name: "DisplaySync", type: make_type.Function(["value"]) },
+        { name: "CloseCamVoice", type: make_type.Function() },
+        { name: "selectExportDb", type: make_type.Function(["data"]) },
+        {
+            name: "ElementBelongWin",
+            type: make_type.Function(["symId", "curWinId"]),
+        },
+        { name: "IsTvbox", type: make_type.Function() },
+        {
+            name: "numColChg",
+            type: make_type.Function(["winId", "symId", "numValue"]),
+        },
+        { name: "strToutf8", type: make_type.Function(["str"]) },
+        { name: "strTounicode", type: make_type.Function(["text"]) },
+        { name: "exchange", type: make_type.Function(["str"]) },
+        {
+            name: "ShowWindowById",
+            type: make_type.Function([
+                "number",
+                "subLocation",
+                "isSystemWinNoChanged",
+            ]),
+        },
+        { name: "HideWindowById", type: make_type.Function(["number"]) },
+        {
+            name: "Clipboard",
+            type: make_type.Function(["type", "options"], {
+                description: "**NOTE**: empty definition",
+            }),
+        },
+        {
+            name: "historyTableExport",
+            type: make_type.Function([], {
+                description: "**NOTE**: empty definition",
             }),
         },
     ],
     Math: [
         { name: "random", type: make_type.Function() },
         { name: "floor", type: make_type.Function() },
-        { name: "ceil", type: make_type.Function() },
-        { name: "PI", type: make_type.Number() },
-        { name: "E", type: make_type.Number() },
     ],
 };
 
