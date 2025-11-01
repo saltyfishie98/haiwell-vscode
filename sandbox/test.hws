@@ -1,3 +1,8 @@
+function test(
+	test1, 
+	test2, test3) 
+	{}
+	
 function timestamp_to_datetime(timestamp) {
     // Get seconds since the start of the day (00:00:00)
     // 86400 = seconds in a day (24 * 60 * 60)
@@ -41,6 +46,8 @@ function publish_details(start_time, unique_id, sku) {
 
 	$Publish.details_event_queued = true;
 }
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 

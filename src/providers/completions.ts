@@ -24,6 +24,11 @@ interface BlockScope {
     type: "function" | "block" | "global";
 }
 
+const SORT_OBJECT = 100;
+const SORT_FUNCTION = 101;
+const SORT_VARIABLE = 102;
+const SORT_CONST = 200;
+
 function type_to_kind(
     vtype: ValueType,
     override_value?: vscode.CompletionItemKind
@@ -39,7 +44,7 @@ function type_to_kind(
                 : vscode.CompletionItemKind.Variable;
 
         case "Object":
-            return vscode.CompletionItemKind.Class;
+            return vscode.CompletionItemKind.Module;
         case "Function":
             return vscode.CompletionItemKind.Function;
     }
@@ -112,85 +117,7 @@ export class HaiwellScriptCompletionProvider
                     continue;
                 }
 
-                const kind = type_to_kind(symbol.prop.type);
-
-                const item = new vscode.CompletionItem(symbol.prop.name, kind);
-
-                if (kind === vscode.CompletionItemKind.Variable) {
-                    const scopeType = symbol.isVarDeclaration
-                        ? "var (function-scoped)"
-                        : "let/const (block-scoped)";
-                    const duplicateWarning = symbol.isDuplicate
-                        ? " ⚠️ DUPLICATE"
-                        : "";
-
-                    item.detail = `${symbol.prop.name} (${duplicateWarning})`;
-
-                    let docText =
-                        `Local variable **${symbol.prop.name}** — ${scopeType}\n\n` +
-                        `**Declared:** line ${symbol.declarationLine + 1}\n\n` +
-                        `**Scope:** lines ${symbol.scopeStart + 1}-${
-                            symbol.scopeEnd + 1
-                        }`;
-
-                    if (symbol.isDuplicate && symbol.duplicateLines) {
-                        docText += `\n\n---\n\n⚠️ **WARNING: Duplicate Declaration**\n\n`;
-                        docText += `This variable is declared multiple times in the same scope:\n`;
-                        for (const line of symbol.duplicateLines) {
-                            docText += `- Line ${line + 1}\n`;
-                        }
-                        docText += `\nFor \`var\` declarations, this creates a single hoisted variable. Later declarations will reassign the same variable.`;
-                    }
-
-                    item.documentation = new vscode.MarkdownString(docText);
-
-                    if (symbol.isDuplicate) {
-                        item.label = {
-                            label: symbol.prop.name,
-                            description: "⚠️ duplicate",
-                        };
-                    }
-                } else {
-                    const duplicateWarning = symbol.isDuplicate
-                        ? " ⚠️ DUPLICATE"
-                        : "";
-
-                    item.detail = `${symbol.prop.name}() (${duplicateWarning})`;
-
-                    let docText =
-                        `Local function **${symbol.prop.name}()**\n\n` +
-                        `**Declared:** line ${symbol.declarationLine + 1}\n\n` +
-                        `**Scope:** lines ${symbol.scopeStart + 1}-${
-                            symbol.scopeEnd + 1
-                        }`;
-
-                    if (symbol.isDuplicate && symbol.duplicateLines) {
-                        docText += `\n\n---\n\n⚠️ **WARNING: Duplicate Function Declaration**\n\n`;
-                        docText += `This function is declared multiple times in the same scope:\n`;
-                        for (const line of symbol.duplicateLines) {
-                            docText += `- Line ${line + 1}\n`;
-                        }
-                        docText += `\nThe last declaration will override previous ones.`;
-                    }
-
-                    item.documentation = new vscode.MarkdownString(docText);
-
-                    if (symbol.isDuplicate) {
-                        item.label = {
-                            label: symbol.prop.name,
-                            description: "⚠️ duplicate",
-                        };
-                    }
-                }
-
-                item.insertText = symbol.prop.name;
-
-                // Sort by scope status first, then scope level, then name
-                // In-scope items: 0xxx, out-of-scope items: 9xxx
-                const scopePrefix = "0";
-                item.sortText = `${scopePrefix}${symbol.scopeLevel
-                    .toString()
-                    .padStart(3, "0")}${symbol.prop.name}`;
+                const item = property_completion(symbol.prop);
 
                 completions.push(item);
                 addedObjects.add(symbol.prop.name);
@@ -202,35 +129,6 @@ export class HaiwellScriptCompletionProvider
             );
         }
 
-        // Global symbols from lib/ (TS/JS exports)
-        try {
-            const globals = cache.getGlobalSymbols();
-            for (const g of globals) {
-                if (addedObjects.has(g.name)) {
-                    continue;
-                }
-
-                const kind =
-                    g.kind === "function"
-                        ? vscode.CompletionItemKind.Function
-                        : g.kind === "class"
-                        ? vscode.CompletionItemKind.Class
-                        : vscode.CompletionItemKind.Variable;
-
-                const item = new vscode.CompletionItem(g.name, kind);
-                item.detail = `${g.name} (global from lib)`;
-                item.insertText = g.name;
-                item.sortText = `0g${g.name}`;
-                item.documentation = new vscode.MarkdownString(
-                    `defined in: \`${path.basename(g.sourceFile)}\``
-                );
-                completions.push(item);
-                addedObjects.add(g.name);
-            }
-        } catch (err) {
-            // ignore
-        }
-
         // Predefined objects
         for (const objectName of Object.keys(PREDEFINED_OBJECTS)) {
             if (addedObjects.has(objectName)) {
@@ -240,11 +138,11 @@ export class HaiwellScriptCompletionProvider
             const properties = PREDEFINED_OBJECTS[objectName];
             const item = new vscode.CompletionItem(
                 objectName,
-                vscode.CompletionItemKind.Class
+                vscode.CompletionItemKind.Module
             );
             item.detail = `${objectName} (predefined)`;
             item.insertText = objectName;
-            item.sortText = `1${objectName}`;
+            item.sortText = `${SORT_OBJECT}${objectName}`;
             item.commitCharacters = ["."];
 
             const propPreview = properties
@@ -268,27 +166,6 @@ export class HaiwellScriptCompletionProvider
             ...addedObjects,
             ...Object.keys(PREDEFINED_VARIABLES),
         ]);
-
-        // Used but undefined objects
-        for (const [objectName, usage] of projectObjects.entries()) {
-            if (addedObjects.has(objectName)) {
-                continue;
-            }
-
-            const item = new vscode.CompletionItem(
-                `\$${objectName}`,
-                vscode.CompletionItemKind.Reference
-            );
-            item.insertText = `\$${objectName}`;
-            item.detail = `${objectName} (⚠️ undefined)`;
-            item.sortText = `3${objectName}`;
-
-            item.documentation = new vscode.MarkdownString(
-                `**${objectName}**\n\n` + "⚠️ Not defined in variable directory"
-            );
-
-            completions.push(item);
-        }
 
         return completions;
     }
@@ -325,7 +202,7 @@ export class HaiwellScriptCompletionProvider
             );
             item.detail = `${varName} (system variable)`;
             item.insertText = varName;
-            item.sortText = `2${varName}`;
+            item.sortText = `${SORT_CONST}${varName}`;
             item.documentation = new vscode.MarkdownString(doc);
 
             completions.push(item);
@@ -347,9 +224,9 @@ export class HaiwellScriptCompletionProvider
             const entry = !variable ? `\$${group}` : variable;
             const detail = !variable ? `${entry} (defined)` : group;
             const kind = !variable
-                ? vscode.CompletionItemKind.Class
+                ? vscode.CompletionItemKind.Module
                 : vscode.CompletionItemKind.Variable;
-            const sort = !variable ? 1 : 2;
+            const sort = !variable ? SORT_OBJECT : SORT_VARIABLE;
 
             const item = new vscode.CompletionItem(`\$${objectName}`, kind);
             item.insertText = `\$${objectName}`;
@@ -411,7 +288,11 @@ export class HaiwellScriptCompletionProvider
 
         // Regex patterns for declarations
         const varRegex = /\b(var)\s+([A-Za-z_][A-Za-z0-9_]*)/g;
-        const funcRegex = /\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
+        // const funcRegex = /\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/g;
+        const funcRegex =
+            /\bfunction\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\(([^)]*)\)\s*{/;
+
+        let cur_func = "";
 
         // Process each line looking for declarations
         for (let lineNum = 0; lineNum < lines.length; lineNum++) {
@@ -500,52 +381,61 @@ export class HaiwellScriptCompletionProvider
             // Find function declarations
             const tempFuncRegex = new RegExp(funcRegex.source, funcRegex.flags);
 
-            while ((match = tempFuncRegex.exec(line)) !== null) {
-                const funcName = match[1];
-
-                // Find the scope where this function is declared
-                const declarationScopes = scopes.filter((scope) =>
-                    this.isPositionInScope(lineNum, match!.index, scope, lines)
-                );
-
-                // Functions are hoisted within their containing scope
-                const effectiveScope =
-                    declarationScopes.sort((a, b) => b.level - a.level)[0] ||
-                    scopes.find((s) => s.type === "global")!;
-
-                // Track function declarations per scope to detect duplicates
-                const scopeKey = `${effectiveScope.startLine}-${effectiveScope.endLine}-${effectiveScope.level}`;
-                if (!scopeDeclarations.has(scopeKey)) {
-                    scopeDeclarations.set(scopeKey, new Map());
-                }
-                const scopeMap = scopeDeclarations.get(scopeKey)!;
-                if (!scopeMap.has(funcName)) {
-                    scopeMap.set(funcName, []);
-                }
-                scopeMap.get(funcName)!.push(lineNum);
-
-                // Function declarations are available anywhere in their scope (hoisted)
-                const isInScope = this.isPositionInScope(
-                    currentLine,
-                    currentChar,
-                    effectiveScope,
-                    lines
-                );
-
-                const symbolInfo: ScopeInfo = {
-                    prop: {
-                        name: funcName,
-                        type: make_type.Function(),
-                    },
-                    declarationLine: lineNum,
-                    scopeStart: effectiveScope.startLine,
-                    scopeEnd: effectiveScope.endLine,
-                    scopeLevel: effectiveScope.level,
-                    isVarDeclaration: false,
-                };
-
-                allSymbols.push(symbolInfo);
+            match = tempFuncRegex.exec(cur_func);
+            if (match === null) {
+                cur_func += line;
+                continue;
             }
+
+            const funcName = match[1];
+            const params = match[2]
+                ? match[2].replace(/\s/g, "").split(",")
+                : [];
+
+            // Find the scope where this function is declared
+            const declarationScopes = scopes.filter((scope) =>
+                this.isPositionInScope(lineNum, match!.index, scope, lines)
+            );
+
+            // Functions are hoisted within their containing scope
+            const effectiveScope =
+                declarationScopes.sort((a, b) => b.level - a.level)[0] ||
+                scopes.find((s) => s.type === "global")!;
+
+            // Track function declarations per scope to detect duplicates
+            const scopeKey = `${effectiveScope.startLine}-${effectiveScope.endLine}-${effectiveScope.level}`;
+            if (!scopeDeclarations.has(scopeKey)) {
+                scopeDeclarations.set(scopeKey, new Map());
+            }
+            const scopeMap = scopeDeclarations.get(scopeKey)!;
+            if (!scopeMap.has(funcName)) {
+                scopeMap.set(funcName, []);
+            }
+            scopeMap.get(funcName)!.push(lineNum);
+
+            // Function declarations are available anywhere in their scope (hoisted)
+            const isInScope = this.isPositionInScope(
+                currentLine,
+                currentChar,
+                effectiveScope,
+                lines
+            );
+
+            const symbolInfo: ScopeInfo = {
+                prop: {
+                    name: funcName,
+                    type: make_type.Function(params),
+                },
+                declarationLine: lineNum,
+                scopeStart: effectiveScope.startLine,
+                scopeEnd: effectiveScope.endLine,
+                scopeLevel: effectiveScope.level,
+                isVarDeclaration: false,
+            };
+
+            allSymbols.push(symbolInfo);
+
+            cur_func = "";
         }
 
         // Mark duplicates
@@ -1026,15 +916,20 @@ function property_completion(prop: PropertyInfo): vscode.CompletionItem {
     let commit_chars;
     let insert_text;
     let kind;
+    let sort;
 
     switch (prop.type.id) {
         case "Object":
-            kind = vscode.CompletionItemKind.Class;
+            kind = vscode.CompletionItemKind.Module;
+            sort = SORT_OBJECT;
             commit_chars = ["."];
+
             break;
 
         case "Function":
             kind = vscode.CompletionItemKind.Function;
+            sort = SORT_FUNCTION;
+
             if (
                 prop.type.params === undefined ||
                 prop.type.params.length <= 0
@@ -1054,8 +949,9 @@ function property_completion(prop: PropertyInfo): vscode.CompletionItem {
             break;
 
         default:
-            kind = vscode.CompletionItemKind.Field;
+            kind = vscode.CompletionItemKind.Variable;
             insert_text = prop.name;
+            sort = SORT_VARIABLE;
             break;
     }
 
@@ -1063,6 +959,7 @@ function property_completion(prop: PropertyInfo): vscode.CompletionItem {
     item.detail = `${prop.name}: ${prop.type.id}`;
     item.commitCharacters = commit_chars;
     item.insertText = insert_text;
+    item.sortText = `${sort}${prop.name}`;
 
     return item;
 }
