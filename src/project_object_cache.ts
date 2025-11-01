@@ -5,14 +5,14 @@ import {
     make_type,
     ObjectUsage,
     PropertyInfo,
-    VariableDefinition,
+    VariableDefinition as VariableGroup,
 } from "./types";
 import { PREDEFINED_OBJECTS, PREDEFINED_VARIABLES } from "./predefined";
 
 export class ProjectObjectCache {
     private static instance: ProjectObjectCache;
     private objectUsageMap: Map<string, ObjectUsage> = new Map();
-    private variableDefinitions: Map<string, VariableDefinition> = new Map();
+    private variable_group: Map<string, VariableGroup> = new Map();
     private globalSymbols: Map<string, GlobalSymbol> = new Map();
     private isIndexing: boolean = false;
     private lastIndexTime: number = 0;
@@ -32,7 +32,7 @@ export class ProjectObjectCache {
     }
 
     async loadVariableDefinitions(): Promise<void> {
-        this.variableDefinitions.clear();
+        this.variable_group.clear();
 
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
@@ -67,12 +67,12 @@ export class ProjectObjectCache {
         }
 
         console.log(
-            `Loaded ${this.variableDefinitions.size} variable definitions from CSV files`
+            `Loaded ${this.variable_group.size} variable definitions from CSV files`
         );
-        if (this.variableDefinitions.size > 0) {
+        if (this.variable_group.size > 0) {
             console.log(
                 "Defined objects:",
-                Array.from(this.variableDefinitions.keys())
+                Array.from(this.variable_group.keys())
             );
         }
     }
@@ -358,8 +358,8 @@ export class ProjectObjectCache {
             }
 
             if (properties.length > 0) {
-                this.variableDefinitions.set(objectName, {
-                    objectName,
+                this.variable_group.set(objectName, {
+                    name: objectName,
                     properties,
                     sourceFile: fileUri.fsPath,
                 });
@@ -369,24 +369,30 @@ export class ProjectObjectCache {
         }
     }
 
-    getDefinedObjects(): string[] {
-        return Array.from(this.variableDefinitions.keys());
+    getUserVariables(): string[] {
+        const variables = Array.from(this.variable_group.entries()).flatMap(
+            ([k, v]) => {
+                return v.properties.map((prop) => k + "." + prop.name);
+            }
+        );
+
+        return [...Array.from(this.variable_group.keys()), ...variables];
     }
 
-    getObjectDefinition(objectName: string): VariableDefinition | undefined {
-        return this.variableDefinitions.get(objectName);
+    getUserVariableGroup(objectName: string): VariableGroup | undefined {
+        return this.variable_group.get(objectName);
     }
 
     isObjectDefined(objectName: string): boolean {
         return (
-            this.variableDefinitions.has(objectName) ||
+            this.variable_group.has(objectName) ||
             PREDEFINED_OBJECTS.hasOwnProperty(objectName) ||
             PREDEFINED_VARIABLES.hasOwnProperty(objectName)
         );
     }
 
     getObjectProperties(objectName: string): PropertyInfo[] {
-        const definition = this.variableDefinitions.get(objectName);
+        const definition = this.variable_group.get(objectName);
         if (definition) {
             return definition.properties;
         }
@@ -493,7 +499,7 @@ export class ProjectObjectCache {
 
     clear(): void {
         this.objectUsageMap.clear();
-        this.variableDefinitions.clear();
+        this.variable_group.clear();
         this.globalSymbols.clear();
         this.lastIndexTime = 0;
     }

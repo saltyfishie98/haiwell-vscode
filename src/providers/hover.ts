@@ -72,7 +72,7 @@ export class HaiwellScriptHoverProvider implements vscode.HoverProvider {
             }
         } else {
             markdown.appendCodeblock(`$${objectName}`, "hwscript");
-            const definition = cache.getObjectDefinition(objectName);
+            const definition = cache.getUserVariableGroup(objectName);
             if (definition) {
                 markdown.appendMarkdown(
                     `\n\nDefined in: \`${path.basename(

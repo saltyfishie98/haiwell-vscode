@@ -134,7 +134,7 @@ export const make_type = {
 
 export interface VariableInfo {
     type: ValueType;
-    rawType: string;
+    rawType?: string;
     // optional source line in the CSV (1-based)
     sourceLine?: number;
     // optional human readable description from CSV
@@ -157,7 +157,7 @@ export interface ObjectUsage {
 }
 
 export interface VariableDefinition {
-    objectName: string;
+    name: string;
     properties: PropertyInfo[];
     sourceFile: string;
 }

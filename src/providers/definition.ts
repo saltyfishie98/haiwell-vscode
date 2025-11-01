@@ -2,7 +2,9 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { ProjectObjectCache } from "../project_object_cache";
 
-export class HaiwellScriptDefinitionProvider implements vscode.DefinitionProvider {
+export class HaiwellScriptDefinitionProvider
+    implements vscode.DefinitionProvider
+{
     async provideDefinition(
         document: vscode.TextDocument,
         position: vscode.Position,
@@ -57,7 +59,7 @@ export class HaiwellScriptDefinitionProvider implements vscode.DefinitionProvide
         }
 
         // Fall back to variable CSV definition if present
-        const definition = cache.getObjectDefinition(objectName);
+        const definition = cache.getUserVariableGroup(objectName);
         if (definition) {
             const uri = vscode.Uri.file(definition.sourceFile);
             // try to open the file and find the property line if possible
@@ -67,7 +69,10 @@ export class HaiwellScriptDefinitionProvider implements vscode.DefinitionProvide
                     const line = doc.lineAt(i).text;
                     // CSV lines typically contain the property name in the first column
                     if (line.match(new RegExp("^\\s*" + objectName + "\\b"))) {
-                        return new vscode.Location(uri, new vscode.Position(i, 0));
+                        return new vscode.Location(
+                            uri,
+                            new vscode.Position(i, 0)
+                        );
                     }
                 }
             } catch (err) {

@@ -2,11 +2,10 @@ import * as vscode from "vscode";
 import * as path from "path";
 import { PREDEFINED_OBJECTS, PREDEFINED_VARIABLES } from "../predefined";
 import { ProjectObjectCache } from "../project_object_cache";
-import { make_type, PropertyInfo, ValueType } from "../types";
+import { make_type, PropertyInfo, ValueType, VariableInfo } from "../types";
 
 interface ScopeInfo {
-    name: string;
-    kind: vscode.CompletionItemKind;
+    prop: PropertyInfo;
     declarationLine: number;
     scopeStart: number;
     scopeEnd: number;
@@ -23,6 +22,27 @@ interface BlockScope {
     endCol: number;
     level: number;
     type: "function" | "block" | "global";
+}
+
+function type_to_kind(
+    vtype: ValueType,
+    override_value?: vscode.CompletionItemKind
+): vscode.CompletionItemKind {
+    switch (vtype.id) {
+        case "String":
+        case "Number":
+        case "Boolean":
+        case "Any":
+        case "Unknown":
+            return override_value
+                ? override_value
+                : vscode.CompletionItemKind.Variable;
+
+        case "Object":
+            return vscode.CompletionItemKind.Class;
+        case "Function":
+            return vscode.CompletionItemKind.Function;
+    }
 }
 
 export class HaiwellScriptCompletionProvider
@@ -47,6 +67,8 @@ export class HaiwellScriptCompletionProvider
             .text.substring(0, position.character);
 
         const dot = linePrefix.match(/((\w+)\.)+/);
+        const haiwell = linePrefix.match(/^\$/);
+
         if (dot) {
             const objectName = dot[0].split(".").filter((s) => s !== "");
             const items = await this.getPropertyCompletions(
@@ -54,6 +76,11 @@ export class HaiwellScriptCompletionProvider
                 document,
                 position
             );
+            return items.length > 0
+                ? new vscode.CompletionList(items, false)
+                : undefined;
+        } else if (haiwell) {
+            const items = await this.getHaiwellObjectCompletions();
             return items.length > 0
                 ? new vscode.CompletionList(items, false)
                 : undefined;
@@ -73,7 +100,6 @@ export class HaiwellScriptCompletionProvider
     ): Promise<vscode.CompletionItem[]> {
         const completions: vscode.CompletionItem[] = [];
         const cache = ProjectObjectCache.getInstance();
-        const definedObjects = cache.getDefinedObjects();
         const projectObjects = await cache.getProjectObjects();
         let addedObjects = new Set<string>();
 
@@ -82,16 +108,15 @@ export class HaiwellScriptCompletionProvider
             const scopedSymbols = this.getScopedSymbols(document, position);
 
             for (const symbol of scopedSymbols) {
-                if (addedObjects.has(symbol.name)) {
+                if (addedObjects.has(symbol.prop.name)) {
                     continue;
                 }
 
-                const item = new vscode.CompletionItem(
-                    symbol.name,
-                    symbol.kind
-                );
+                const kind = type_to_kind(symbol.prop.type);
 
-                if (symbol.kind === vscode.CompletionItemKind.Variable) {
+                const item = new vscode.CompletionItem(symbol.prop.name, kind);
+
+                if (kind === vscode.CompletionItemKind.Variable) {
                     const scopeType = symbol.isVarDeclaration
                         ? "var (function-scoped)"
                         : "let/const (block-scoped)";
@@ -99,10 +124,10 @@ export class HaiwellScriptCompletionProvider
                         ? " ⚠️ DUPLICATE"
                         : "";
 
-                    item.detail = `${symbol.name} (${duplicateWarning})`;
+                    item.detail = `${symbol.prop.name} (${duplicateWarning})`;
 
                     let docText =
-                        `Local variable **${symbol.name}** — ${scopeType}\n\n` +
+                        `Local variable **${symbol.prop.name}** — ${scopeType}\n\n` +
                         `**Declared:** line ${symbol.declarationLine + 1}\n\n` +
                         `**Scope:** lines ${symbol.scopeStart + 1}-${
                             symbol.scopeEnd + 1
@@ -121,7 +146,7 @@ export class HaiwellScriptCompletionProvider
 
                     if (symbol.isDuplicate) {
                         item.label = {
-                            label: symbol.name,
+                            label: symbol.prop.name,
                             description: "⚠️ duplicate",
                         };
                     }
@@ -130,10 +155,10 @@ export class HaiwellScriptCompletionProvider
                         ? " ⚠️ DUPLICATE"
                         : "";
 
-                    item.detail = `${symbol.name}() (${duplicateWarning})`;
+                    item.detail = `${symbol.prop.name}() (${duplicateWarning})`;
 
                     let docText =
-                        `Local function **${symbol.name}()**\n\n` +
+                        `Local function **${symbol.prop.name}()**\n\n` +
                         `**Declared:** line ${symbol.declarationLine + 1}\n\n` +
                         `**Scope:** lines ${symbol.scopeStart + 1}-${
                             symbol.scopeEnd + 1
@@ -152,23 +177,23 @@ export class HaiwellScriptCompletionProvider
 
                     if (symbol.isDuplicate) {
                         item.label = {
-                            label: symbol.name,
+                            label: symbol.prop.name,
                             description: "⚠️ duplicate",
                         };
                     }
                 }
 
-                item.insertText = symbol.name;
+                item.insertText = symbol.prop.name;
 
                 // Sort by scope status first, then scope level, then name
                 // In-scope items: 0xxx, out-of-scope items: 9xxx
                 const scopePrefix = "0";
                 item.sortText = `${scopePrefix}${symbol.scopeLevel
                     .toString()
-                    .padStart(3, "0")}${symbol.name}`;
+                    .padStart(3, "0")}${symbol.prop.name}`;
 
                 completions.push(item);
-                addedObjects.add(symbol.name);
+                addedObjects.add(symbol.prop.name);
             }
         } catch (err) {
             console.error(
@@ -220,6 +245,7 @@ export class HaiwellScriptCompletionProvider
             item.detail = `${objectName} (predefined)`;
             item.insertText = objectName;
             item.sortText = `1${objectName}`;
+            item.commitCharacters = ["."];
 
             const propPreview = properties
                 .slice(0, 5)
@@ -237,6 +263,44 @@ export class HaiwellScriptCompletionProvider
             completions.push(item);
             addedObjects.add(objectName);
         }
+
+        addedObjects = new Set([
+            ...addedObjects,
+            ...Object.keys(PREDEFINED_VARIABLES),
+        ]);
+
+        // Used but undefined objects
+        for (const [objectName, usage] of projectObjects.entries()) {
+            if (addedObjects.has(objectName)) {
+                continue;
+            }
+
+            const item = new vscode.CompletionItem(
+                `\$${objectName}`,
+                vscode.CompletionItemKind.Reference
+            );
+            item.insertText = `\$${objectName}`;
+            item.detail = `${objectName} (⚠️ undefined)`;
+            item.sortText = `3${objectName}`;
+
+            item.documentation = new vscode.MarkdownString(
+                `**${objectName}**\n\n` + "⚠️ Not defined in variable directory"
+            );
+
+            completions.push(item);
+        }
+
+        return completions;
+    }
+
+    private async getHaiwellObjectCompletions(): Promise<
+        vscode.CompletionItem[]
+    > {
+        const completions: vscode.CompletionItem[] = [];
+        const cache = ProjectObjectCache.getInstance();
+        const definedObjects = cache.getUserVariables();
+        const projectObjects = await cache.getProjectObjects();
+        let addedObjects = new Set<string>();
 
         // Predefined Variables
         for (const [name, info] of Object.entries(PREDEFINED_VARIABLES)) {
@@ -273,18 +337,25 @@ export class HaiwellScriptCompletionProvider
                 continue;
             }
 
-            const definition = cache.getObjectDefinition(objectName);
+            const [group, variable] = objectName.split(".");
+
+            const definition = cache.getUserVariableGroup(group);
             if (!definition) {
                 continue;
             }
 
-            const item = new vscode.CompletionItem(
-                `\$${objectName}`,
-                vscode.CompletionItemKind.Class
-            );
-            item.detail = `${objectName} (defined)`;
+            const entry = !variable ? `\$${group}` : variable;
+            const detail = !variable ? `${entry} (defined)` : group;
+            const kind = !variable
+                ? vscode.CompletionItemKind.Class
+                : vscode.CompletionItemKind.Variable;
+            const sort = !variable ? 1 : 2;
+
+            const item = new vscode.CompletionItem(`\$${objectName}`, kind);
             item.insertText = `\$${objectName}`;
-            item.sortText = `1${objectName}`;
+            item.detail = detail;
+            item.sortText = `${sort}${objectName}`;
+            item.commitCharacters = ["."];
 
             const propPreview = definition.properties
                 .slice(0, 5)
@@ -309,27 +380,6 @@ export class HaiwellScriptCompletionProvider
             ...addedObjects,
             ...Object.keys(PREDEFINED_VARIABLES),
         ]);
-
-        // Used but undefined objects
-        for (const [objectName, usage] of projectObjects.entries()) {
-            if (addedObjects.has(objectName)) {
-                continue;
-            }
-
-            const item = new vscode.CompletionItem(
-                `\$${objectName}`,
-                vscode.CompletionItemKind.Reference
-            );
-            item.detail = `${objectName} (⚠️ undefined)`;
-            item.insertText = `\$${objectName}`;
-            item.sortText = `3${objectName}`;
-
-            item.documentation = new vscode.MarkdownString(
-                `**${objectName}**\n\n` + "⚠️ Not defined in variable directory"
-            );
-
-            completions.push(item);
-        }
 
         return completions;
     }
@@ -431,8 +481,10 @@ export class HaiwellScriptCompletionProvider
                       );
 
                 const symbolInfo: ScopeInfo = {
-                    name: varName,
-                    kind: vscode.CompletionItemKind.Variable,
+                    prop: {
+                        name: varName,
+                        type: make_type.Any(),
+                    },
                     declarationLine: lineNum,
                     scopeStart: effectiveScope.startLine,
                     scopeEnd: effectiveScope.endLine,
@@ -481,8 +533,10 @@ export class HaiwellScriptCompletionProvider
                 );
 
                 const symbolInfo: ScopeInfo = {
-                    name: funcName,
-                    kind: vscode.CompletionItemKind.Function,
+                    prop: {
+                        name: funcName,
+                        type: make_type.Function(),
+                    },
                     declarationLine: lineNum,
                     scopeStart: effectiveScope.startLine,
                     scopeEnd: effectiveScope.endLine,
@@ -501,7 +555,7 @@ export class HaiwellScriptCompletionProvider
                     // This name has multiple declarations in the same scope
                     for (const symbol of allSymbols) {
                         if (
-                            symbol.name === name &&
+                            symbol.prop.name === name &&
                             lines.includes(symbol.declarationLine)
                         ) {
                             symbol.isDuplicate = true;
@@ -517,9 +571,9 @@ export class HaiwellScriptCompletionProvider
         const uniqueSymbols: ScopeInfo[] = [];
 
         for (const symbol of allSymbols) {
-            if (!seenNames.has(symbol.name)) {
+            if (!seenNames.has(symbol.prop.name)) {
                 uniqueSymbols.push(symbol);
-                seenNames.add(symbol.name);
+                seenNames.add(symbol.prop.name);
             }
         }
 
@@ -652,7 +706,8 @@ export class HaiwellScriptCompletionProvider
         // For var and function declarations (hoisted), available anywhere in scope
         if (
             symbol.isVarDeclaration ||
-            symbol.kind === vscode.CompletionItemKind.Function
+            type_to_kind(symbol.prop.type) ===
+                vscode.CompletionItemKind.Function
         ) {
             return true;
         }
@@ -876,17 +931,11 @@ export class HaiwellScriptCompletionProvider
         }
 
         return properties.map((prop) => {
-            const item = new vscode.CompletionItem(
-                prop.name,
-                vscode.CompletionItemKind.Property
-            );
-            item.detail = `${prop.name}: ${prop.type.id}`;
-            item.insertText = prop.name;
-
+            const item = property_completion(prop);
             const md = new vscode.MarkdownString();
 
             if (prop.rawType === undefined) {
-                md.appendMarkdown(`## ${prop.name} : \`any\`\n\n`);
+                md.appendMarkdown(`## ${prop.name} : \`ANY\`\n\n`);
             } else {
                 md.appendMarkdown(`## ${prop.name} : \`${prop.rawType}\`\n\n`);
             }
@@ -971,4 +1020,49 @@ export class HaiwellScriptCompletionProvider
     public dispose(): void {
         this.diagnosticCollection.dispose();
     }
+}
+
+function property_completion(prop: PropertyInfo): vscode.CompletionItem {
+    let commit_chars;
+    let insert_text;
+    let kind;
+
+    switch (prop.type.id) {
+        case "Object":
+            kind = vscode.CompletionItemKind.Class;
+            commit_chars = ["."];
+            break;
+
+        case "Function":
+            kind = vscode.CompletionItemKind.Function;
+            if (
+                prop.type.params === undefined ||
+                prop.type.params.length <= 0
+            ) {
+                insert_text = `${prop.name}()`;
+            } else {
+                const param_str = prop.type.params
+                    .map((param, id) => {
+                        return `\$\{${id + 1}:${param.name}\}`;
+                    })
+                    .join(", ");
+
+                insert_text = new vscode.SnippetString(
+                    `${prop.name}(${param_str})`
+                );
+            }
+            break;
+
+        default:
+            kind = vscode.CompletionItemKind.Field;
+            insert_text = prop.name;
+            break;
+    }
+
+    const item = new vscode.CompletionItem(prop.name, kind);
+    item.detail = `${prop.name}: ${prop.type.id}`;
+    item.commitCharacters = commit_chars;
+    item.insertText = insert_text;
+
+    return item;
 }
