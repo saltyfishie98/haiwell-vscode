@@ -2,6 +2,13 @@ function test(
 	test1, 
 	test2, test3) 
 	{}
+
+const foo = {
+	bar: 2,
+	baz: {
+		testing: 2,
+	}
+}
 	
 function timestamp_to_datetime(timestamp) {
     // Get seconds since the start of the day (00:00:00)
