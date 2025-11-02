@@ -1,15 +1,28 @@
+var foo = {
+	a: [1, 3, 4],
+	baz: {
+		testing: 2,
+		nest: {
+			test_2: 2,
+			test_1: "hello",
+			nest_1: {
+				hello: "world",
+			}
+		}
+	},
+	c: function () {},
+	bar: 2,
+    b: "trest",
+
+};
+
+foo
+
 function test(
 	test1, 
 	test2, test3) 
 	{}
 
-const foo = {
-	bar: 2,
-	baz: {
-		testing: 2,
-	}
-}
-	
 function timestamp_to_datetime(timestamp) {
     // Get seconds since the start of the day (00:00:00)
     // 86400 = seconds in a day (24 * 60 * 60)

@@ -1,5 +1,6 @@
 // src/extension.ts - Main extension file with JSON object parsing
 
+import { assert } from "console";
 import * as vscode from "vscode";
 
 type TypeId =
@@ -664,6 +665,49 @@ class ScopeAwareExtractor {
     }
 
     private parseObjectLiteral(): Map<string, PropertyInfo> {
+        const make_prop = (valueToken?: Token): ValueType => {
+            let propType;
+
+            if (valueToken) {
+                if (valueToken.type === TokenType.String) {
+                    propType = make_type.String();
+                } else if (valueToken.type === TokenType.Number) {
+                    propType = make_type.Number();
+                } else if (
+                    valueToken.value === "true" ||
+                    valueToken.value === "false"
+                ) {
+                    propType = make_type.Boolean();
+                } else if (valueToken.value === "{") {
+                    propType = make_type.Object({});
+                } else if (valueToken.value === "[") {
+                    propType = make_type.Array();
+                } else if (valueToken.value === "function") {
+                    propType = make_type.Function();
+                } else if (valueToken.value === "null") {
+                    propType = make_type.Null();
+                } else if (valueToken.value === "undefined") {
+                    propType = make_type.Undefined();
+                } else {
+                    // Check for arrow function
+                    let checkPos = this.pos;
+                    while (
+                        checkPos < this.tokens.length &&
+                        this.tokens[checkPos].value !== "," &&
+                        this.tokens[checkPos].value !== "}"
+                    ) {
+                        if (this.tokens[checkPos].value === "=>") {
+                            propType = make_type.Function();
+                            break;
+                        }
+                        checkPos++;
+                    }
+                }
+            }
+
+            return propType ? propType : make_type.Any();
+        };
+
         const properties = new Map<string, PropertyInfo>();
 
         if (!this.match("{")) {
@@ -693,65 +737,141 @@ class ScopeAwareExtractor {
 
                     // Infer property type from value
                     const valueToken = this.current();
-                    let propType;
-
-                    if (valueToken) {
-                        if (valueToken.type === TokenType.String) {
-                            propType = make_type.String();
-                        } else if (valueToken.type === TokenType.Number) {
-                            propType = make_type.Number();
-                        } else if (
-                            valueToken.value === "true" ||
-                            valueToken.value === "false"
-                        ) {
-                            propType = make_type.Boolean();
-                        } else if (valueToken.value === "{") {
-                            propType = make_type.Object({});
-                        } else if (valueToken.value === "[") {
-                            propType = make_type.Array();
-                        } else if (valueToken.value === "function") {
-                            propType = make_type.Function();
-                        } else if (valueToken.value === "null") {
-                            propType = make_type.Null();
-                        } else if (valueToken.value === "undefined") {
-                            propType = make_type.Undefined();
-                        } else {
-                            // Check for arrow function
-                            let checkPos = this.pos;
-                            while (
-                                checkPos < this.tokens.length &&
-                                this.tokens[checkPos].value !== "," &&
-                                this.tokens[checkPos].value !== "}"
-                            ) {
-                                if (this.tokens[checkPos].value === "=>") {
-                                    propType = make_type.Function();
-                                    break;
-                                }
-                                checkPos++;
-                            }
-                        }
-                    }
-
-                    properties.set(propName, {
-                        type: propType ? propType : make_type.Any(),
-                    });
+                    let propType = make_prop(valueToken);
 
                     // Skip to next property or end
                     let depth = 0;
+                    let nest: [string, PropertyInfo][] = [];
                     while (
                         this.current() &&
                         !(depth === 0 && (this.match(",") || this.match("}")))
                     ) {
-                        if (this.match("{") || this.match("[")) {
+                        if (depth > 0 && !this.match("}")) {
+                            let child;
+
+                            switch (propType.id) {
+                                case "array":
+                                    child = !propType.child
+                                        ? []
+                                        : propType.child;
+
+                                    const ty = make_prop(this.consume());
+
+                                    if (ty) {
+                                        child.push({
+                                            type: ty,
+                                        });
+
+                                        propType.child = child;
+                                        propType.length = child.length;
+                                    }
+
+                                    break;
+
+                                case "object":
+                                    child = !propType.child
+                                        ? new Map<string, PropertyInfo>()
+                                        : propType.child;
+
+                                    const current = this.consume();
+
+                                    if (
+                                        current &&
+                                        current.type === TokenType.Identifier
+                                    ) {
+                                        let name = current.value;
+
+                                        if (this.peek()?.value === "{") {
+                                            nest.push([
+                                                name,
+                                                {
+                                                    type: make_type.Object({}),
+                                                },
+                                            ]);
+
+                                            this.consume();
+                                            break;
+                                        }
+
+                                        this.consume();
+                                        const ty = make_prop(this.consume());
+
+                                        if (nest.length <= 0) {
+                                            child.set(name, {
+                                                type: ty,
+                                            });
+                                        } else {
+                                            let [id, prop] = nest[depth - 2];
+
+                                            if (
+                                                !prop ||
+                                                prop.type.id !== "object"
+                                            ) {
+                                                this.consume();
+                                                break;
+                                            }
+
+                                            prop.type.child!.set(name, {
+                                                type: ty,
+                                            });
+                                        }
+
+                                        propType.child = child;
+                                    } else {
+                                        this.consume();
+                                    }
+
+                                    break;
+
+                                case "function":
+                                    child = !propType.params
+                                        ? new Map()
+                                        : propType.params;
+
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
+
+                        if (
+                            (this.match("{") && propType.id !== "function") ||
+                            this.match("[") ||
+                            this.match("function")
+                        ) {
                             depth++;
                         } else if (this.match("}") || this.match("]")) {
                             depth--;
+                            const inner = nest.pop();
+
+                            let upper;
+                            if (
+                                inner &&
+                                (upper = nest.at(-1)) === undefined &&
+                                propType.id === "object" &&
+                                propType.child
+                            ) {
+                                propType.child.set(inner[0], inner[1]);
+                            } else if (
+                                inner &&
+                                (upper = nest.at(-1)) !== undefined &&
+                                upper[1].type.id === "object"
+                            ) {
+                                upper[1].type.child!.set(inner[0], inner[1]);
+                            }
+
                             if (depth < 0) {
                                 break;
                             }
                         }
-                        this.pos++;
+
+                        this.consume();
                     }
+
+                    properties.set(propName, {
+                        type: propType,
+                    });
 
                     if (this.match(",")) {
                         this.consume(); // ','
@@ -964,27 +1084,10 @@ class JSCompletionProvider implements vscode.CompletionItemProvider {
         const offset = document.offsetAt(position);
         const linePrefix = document
             .lineAt(position)
-            .text.substr(0, position.character);
+            .text.substring(0, position.character);
 
         // Check for member access (e.g., "obj.")
         const memberAccessMatch = linePrefix.match(/(\w+)\.(\w*)$/);
-
-        if (memberAccessMatch) {
-            const objectName = memberAccessMatch[1];
-            return this.provideMemberCompletions(document, offset, objectName);
-        }
-
-        // Regular symbol completions
-        const visibleSymbols = this.cache.getVisibleSymbols(document, offset);
-        const items: vscode.CompletionItem[] = [];
-
-        // Add visible symbols based on scope
-        for (const [name, info] of visibleSymbols) {
-            const item = new vscode.CompletionItem(name, info.kind);
-            item.detail = info.detail;
-            item.documentation = new vscode.MarkdownString(info.documentation);
-            items.push(item);
-        }
 
         // Add globals (always visible)
         const globals = [
@@ -1035,6 +1138,23 @@ class JSCompletionProvider implements vscode.CompletionItemProvider {
             },
         ];
 
+        if (memberAccessMatch) {
+            const objectName = memberAccessMatch[1];
+            return this.provideMemberCompletions(document, offset, objectName);
+        }
+
+        // Regular symbol completions
+        const visibleSymbols = this.cache.getVisibleSymbols(document, offset);
+        const items: vscode.CompletionItem[] = [];
+
+        // Add visible symbols based on scope
+        for (const [name, info] of visibleSymbols) {
+            const item = new vscode.CompletionItem(name, info.kind);
+            item.detail = info.detail;
+            item.documentation = new vscode.MarkdownString(info.documentation);
+            items.push(item);
+        }
+
         for (const g of globals) {
             const item = new vscode.CompletionItem(g.name, g.kind);
             item.detail = g.detail;
@@ -1061,9 +1181,9 @@ class JSCompletionProvider implements vscode.CompletionItemProvider {
                         ? vscode.CompletionItemKind.Method
                         : vscode.CompletionItemKind.Property
                 );
-                item.detail = `${propInfo.type}`;
+                item.detail = `${propInfo.type.id}`;
                 item.documentation = new vscode.MarkdownString(
-                    `Property **${propName}** of type \`${propInfo.type}\``
+                    `Property **${propName}** of type \`${propInfo.type.id}\``
                 );
                 items.push(item);
             }
