@@ -21,7 +21,7 @@ type TypeMetadata = {
 
 type FunctionParam = {
     name: string;
-    type: string;
+    type: TypeId;
     metadata?: TypeMetadata;
 };
 
@@ -156,7 +156,7 @@ const make_type = {
 
             return {
                 name: n,
-                type: t,
+                type: t as TypeId,
             };
         });
 
@@ -796,6 +796,51 @@ class ScopeAwareExtractor {
                                         this.consume();
                                         const ty = make_prop(this.consume());
 
+                                        if (ty.id === "function") {
+                                            let param;
+                                            while (
+                                                (param = this.consume())
+                                                    ?.value !== ")"
+                                            ) {
+                                                if (
+                                                    param?.type !==
+                                                    TokenType.Identifier
+                                                ) {
+                                                    continue;
+                                                }
+
+                                                ty.params = ty.params
+                                                    ? ty.params
+                                                    : [];
+
+                                                ty.params.push({
+                                                    name: param.value,
+                                                    type: "any",
+                                                });
+                                            }
+
+                                            let token;
+                                            if (
+                                                (token = this.consume())
+                                                    ?.value === "{"
+                                            ) {
+                                                let level = 1;
+                                                while (level > 0) {
+                                                    token = this.consume();
+
+                                                    if (token?.value === "{") {
+                                                        ++level;
+                                                    } else if (
+                                                        token?.value === "}"
+                                                    ) {
+                                                        --level;
+                                                    }
+                                                }
+                                            }
+
+                                            this.current();
+                                        }
+
                                         if (nest.length <= 0) {
                                             child.set(name, {
                                                 type: ty,
@@ -825,8 +870,25 @@ class ScopeAwareExtractor {
 
                                 case "function":
                                     child = !propType.params
-                                        ? new Map()
+                                        ? []
                                         : propType.params;
+
+                                    if (child.length === 0) {
+                                        this.consume();
+                                    }
+
+                                    let params = this.consume();
+                                    if (
+                                        params &&
+                                        params.type === TokenType.Identifier
+                                    ) {
+                                        child.push({
+                                            name: params.value,
+                                            type: "any",
+                                        });
+
+                                        propType.params = child;
+                                    }
 
                                     break;
 
