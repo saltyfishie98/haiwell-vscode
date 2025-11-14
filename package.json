@@ -2,7 +2,7 @@
     "name": "haiwell-vscode",
     "displayName": "Haiwell VSCode",
     "description": "Language support for Haiwell scripting",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "publisher": "saltyfishie",
     "repository": {
         "url": "https://github.com/saltyfishie98/haiwell-vscode"
